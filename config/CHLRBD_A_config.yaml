@@ -1,0 +1,18 @@
+quality_threshold: 20
+min_length: 50
+expected_length: 297 #334 including adapters
+seq_threshold: 1
+qtrim: "r"
+
+#fwd_adapter: "CACGACCACCCGGTATGG" # RK_CHL_123C_rev_V2 primer bind !!! forward and reverse directions are switched in Aviti!
+#rc_adapter: "CACCTCATCGCCTCTAATTACG" #reverse complement of RK_CHL_123C_fwd_V2 primer bind
+fwd_adapter: "CGTAATTAGAGGCGATGAGGTG"
+rc_adapter: "CCATACCGGGTGGTCGTG"
+
+wt: "CGGCAGATCGCACCAGGCCAGACCGGTAAGATCGCTGACTACAACTATAAGCTGCCTGATGATTTTACAGGCTGCGTGATCGCCTGGAACTCTAACAACCTGGATAGCAAGGTGGGCGGCAACTACAACTACCTGTACCGGCTGTTTCGCAAGTCTAACCTGAAACCTTTCGAGAGAGACATCTCCACAGAGATCTACCAGGCCGGTTCTACACCTTGTAACGGGGTGGAAGGCTTCAACTGTTACTTCCCTCTGCAAAGCTACGGCTTCCAGCCTACCAATGGAGTCGGCTACCAG"
+repair: true
+trim: true
+filter: true
+input_dir: "/cluster/project/reddy/rakuhn/MammalianExpression/data/fastq"
+output_dir: "/cluster/project/reddy/rakuhn/MammalianExpression/output"
+bbmap_dir: "/cluster/project/reddy/rakuhn/bbmap"
