@@ -32,7 +32,7 @@ try:
         print("Login using credentials")
         # TO CHANGE before running the script
         username = "marluca" #input("Enter your openBIS username: ")
-        password = "4606=qCfN4606=qCfN" #getpass.getpass("Enter your openBIS password: ")
+        password = "..." #getpass.getpass("Enter your openBIS password: ")
         o.login(username, password, save_token=True)
 
     # If user is connected
