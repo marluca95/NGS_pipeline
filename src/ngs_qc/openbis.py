@@ -31,8 +31,8 @@ try:
     else:
         print("Login using credentials")
         # TO CHANGE before running the script
-        username = "rakuhn" #input("Enter your openBIS username: ")
-        password = "PASSWORD" #getpass.getpass("Enter your openBIS password: ")
+        username = "marluca" #input("Enter your openBIS username: ")
+        password = "4606=qCfN4606=qCfN" #getpass.getpass("Enter your openBIS password: ")
         o.login(username, password, save_token=True)
 
     # If user is connected
@@ -60,38 +60,31 @@ try:
                     # Download all the datasets of the sample
                     for dataset in datasets:
 
-                        os.chdir(path_to_output)
+                        output_dir = os.path.abspath(path_to_output)
 
-                        # In case the flowcell is set, download only the datasets that belong to the flowcell
                         if flowcell_id:
                             pattern = sample_data.code + "_" + flowcell_id
                             ds = o.get_dataset(dataset.code)
                             sss = ds.file_list
 
-                            # Check if in the sample name there is the flowcell id
                             if any(pattern in s for s in sss):
-                                print(
-                                    "Downloading of the dataset " + dataset.code + " of the sample " + sample_data.code + "...")
-                                if dataset.download():
-                                    print("The downloading of the dataset " + dataset.code + " finished with success!")
+                                print(f"Downloading dataset {dataset.code} of sample {sample_data.code}...")
+                                if dataset.download(destination=output_dir):
+                                    print(f"Dataset {dataset.code} downloaded successfully!")
                                 else:
-                                    print("ERROR downloading dataset " + dataset.code)
+                                    print(f"ERROR downloading dataset {dataset.code}")
                                     sys.exit()
-
                         else:
-                            # REMEMBER: An object "sample" can have multiple datasets from different flowcells and lanes.
                             if len(dataset.file_list) > 0:
-
-                                print(
-                                    "Downloading of the dataset " + dataset.code + " of the sample " + sample_data.code + "...")
-                                if dataset.download():
-                                    print("The downloading of the dataset " + dataset.code + " finished with success!")
+                                print(f"Downloading dataset {dataset.code} of sample {sample_data.code}...")
+                                if dataset.download(destination=output_dir):
+                                    print(f"Dataset {dataset.code} downloaded successfully!")
                                 else:
-                                    print("ERROR downloading dataset " + dataset.code)
+                                    print(f"ERROR downloading dataset {dataset.code}")
                                     sys.exit()
                             else:
-                                print(
-                                    "The dataset " + dataset.code + " of the sample " + sample_data.code + " doesn't have reads!")
+                                print(f"Dataset {dataset.code} of sample {sample_data.code} has no reads.")
+
             else:
                 print(
                     "ERROR: the pool id " + pool_id + " does not exists. Please double check the ID in the openBIS UI")
