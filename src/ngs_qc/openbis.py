@@ -4,7 +4,6 @@ from pybis import Openbis
 import sys
 import getpass
 
-
 try:
     # Parse arguments
     parser = argparse.ArgumentParser(description='Script to let openBIS users to download data from the new openbis ELN(April 24th 2023)')

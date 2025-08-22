@@ -40,6 +40,18 @@ def read_fastq_gz_in_chunks(file_path, chunk_size=100000):
             yield batch
 
 
+def find_r1_files(input_dir, identifier):
+    # Regex: look for the identifier AND '_R1' before extension
+    pattern = re.compile(rf"{re.escape(identifier)}.*_R1.*\.fastq\.gz$")
+    
+    r1_files = []
+    for root, dirs, files in os.walk(input_dir):
+        for file in files:
+            if pattern.search(file):
+                r1_files.append(os.path.join(root, file))
+    
+    return r1_files
+
 # Function to process a FASTQ file pair (R1 and R2)
 def process_fastq_file(output_dir, R1, R2, config):
     # Extract sample name by cleaning the filename (removing parts of the name indicating lane, read direction, etc.)
@@ -651,7 +663,8 @@ def main():
     total_filtered_reads = 0
 
     # Extract the R1 and R2 files corresponding to the sample ID
-    R1_files = [file for file in os.listdir(input_dir) if args.sample in file and "_R1" in file]
+    print(args.sample)
+    R1_files = find_r1_files(input_dir, args.sample)
 
     samples = {}
 
