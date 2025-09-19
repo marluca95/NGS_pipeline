@@ -1,7 +1,8 @@
-torch
-pybis
-pandas
-Levenshtein
 Bio
+fuzzysearch
+Levenshtein
+pandas
+pybis
 PyYAML
+torch
 #-e .

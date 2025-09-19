@@ -1,0 +1,24 @@
+# umi_config_template.yaml
+
+# Sample-specific information
+sample_name: "GFB-59053"                    # Update for each sample
+input_fastq: ""                             # Will be set by the SLURM script automatically
+output_dir: ""                              # Will be set by the SLURM script automatically
+
+# UMI and sequence extraction parameters
+umi_length: 12                              # Length of the UMI at the start of R1
+anchor_sequence: "TCAGGGCGCCAGTTCTCTAACTC"  # Anchor downstream of UMI for trimming
+max_mismatches: 2                           # Max allowed mismatches for fuzzy anchor matching
+min_umi_length: 12                          # Minimum acceptable UMI length after trimming
+
+# Error/Amplification bias correction
+min_reads_per_umi: 2                        # Minimum number of reads to build a consensus UMI sequence
+consensus_method: "majority"                # How to call consensus from reads (e.g., 'majority', 'consensus_quality')
+
+# Logging and reporting options
+log_file: "umi_processing.log"              # Name of log file in output_dir
+report_metrics: true                        # Generate metrics such as UMI diversity, distribution of reads per UMI
+
+# Optional quality filtering
+quality_threshold: 20                       # Phred quality score threshold for trimming
+trim_ends: true                             # Trim low-quality bases from ends
