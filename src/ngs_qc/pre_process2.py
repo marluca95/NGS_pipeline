@@ -641,12 +641,18 @@ def main():
     print(f"Forward adapter: {config['fwd_adapter']}")
     print(f"Reverse adapter: {config['rc_adapter']}")
     print(f"Wild-type sequence: {config['wt']}")
-    logger = l.Logger('./', f'logger_array_id_{args.sample}.txt')
+    logger = l.Logger('./logs/', f'logger_array_id_{args.sample}.txt')
     # Define directories based on the parsed config
     input_dir = config['input_dir']
     output_dir = config['output_dir']
     os.makedirs(output_dir, exist_ok=True)  # Ensure output directory exists
     bbmap_dir = config['bbmap_dir']
+
+    # After parsing YAML config
+    sample_id = args.sample  # This is e.g., '59055' from SLURM array
+    sample_output_dir = Path(config['output_dir']) / sample_id
+    sample_output_dir.mkdir(parents=True, exist_ok=True)
+
 
     # Initialize a list to store the read counts for each file
     all_read_counts = []
@@ -732,7 +738,7 @@ def main():
                 filtered_reads = 0
 
                 # Process the R1 and R2 files
-                R1, R2, output_files = process_fastq_file(output_dir, R1, R2, config)
+                R1, R2, output_files = process_fastq_file(sample_output_dir, R1, R2, config)
 
                 # Verify that R1 and R2 exist after processing
                 if not os.path.exists(R1) or not os.path.exists(R2):
@@ -920,7 +926,7 @@ def main():
         logger.log(f"Starting combine for sample {sample_id}")
         # Now combine all processed files
         print("Running final combining of all processed files...")
-        combine_result = combine_filtered_merged_files(output_dir, all_merged_files, output_files,
+        combine_result = combine_filtered_merged_files(sample_output_dir, all_merged_files, output_files,
                                                        filtering_done=filter_done)
 
         if combine_result['status'] != 'success':
@@ -959,7 +965,7 @@ def main():
                 short_sample_name = extraction_result['short_sample_name']
 
                 # Save the info_df for this sample to a CSV file
-                info_df.to_csv(f"{output_dir}/{short_sample_name}_info_df.csv", index=False)
+                info_df.to_csv(f"{sample_output_dir}/{short_sample_name}_info_df.csv", index=False)
                 print(f"Info DataFrame saved for {short_sample_name} as {short_sample_name}_info_df.csv")
 
                 # Sum of the 'seq_counts' column
@@ -995,7 +1001,7 @@ def main():
                 print(read_df.head())
 
                 # Add the read_df to the final CSV
-                output_filename = os.path.join(output_dir, "final_read_counts.csv")
+                output_filename = os.path.join(sample_output_dir, "final_read_counts.csv")
 
                 # Append the read counts for this sample to the final CSV
                 read_df.to_csv(output_filename, mode='a', header=(not os.path.exists(output_filename)), index=False)
@@ -1010,7 +1016,7 @@ def main():
                 # print(f"Number of reads after combining: {combined_reads}")
                 # print(f"Number of reads after final filtering: {final_filtered_count}")
 
-                organize_files_at_end(output_dir, output_files, sample_id, info_df)
+                organize_files_at_end(sample_output_dir, output_files, sample_id, info_df)
 
                 del extraction_result, combined_files
                 # del filtered_reads, initial_R1_reads, repaired_R1_reads, trimmed_R1_reads, merged_reads, final_filtered_count
