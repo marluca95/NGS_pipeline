@@ -7,6 +7,8 @@ import getpass
 try:
     # Parse arguments
     parser = argparse.ArgumentParser(description='Script to let openBIS users to download data from the new openbis ELN(April 24th 2023)')
+    parser.add_argument('--username', help='Enter openBis username', required=True)
+    parser.add_argument('--password', help='Enter openBis password', required=True)
     parser.add_argument('--path_to_output', help='Path to the output folder', required=True)
     parser.add_argument('--pool_id', help='ID of the pool in openBIS(e.g. /GFB/POOL-1)', required=True)
     parser.add_argument('--flowcell_id',help='ID of the flowcell. You can find this value in the notification of NGSvivo(e.g. Flowcell: 000000000-DM2VM). It is not mandatory. To use only in case the user wants to download sample data of a single flowcell.',
@@ -30,8 +32,8 @@ try:
     else:
         print("Login using credentials")
         # TO CHANGE before running the script
-        username = "marluca" #input("Enter your openBIS username: ")
-        password = "..." #getpass.getpass("Enter your openBIS password: ")
+        username = args.username #input("Enter your openBIS username: ")
+        password = args.password #getpass.getpass("Enter your openBIS password: ")
         o.login(username, password, save_token=True)
 
     # If user is connected
