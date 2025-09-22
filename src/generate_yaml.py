@@ -9,6 +9,12 @@ def generate_yaml(pool, sample_id, tcr='A3'):
             'fwd_adapter': "GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG",
             'rc_adapter': "TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG",
             'expected_length': 269
+        },
+        'DMF5': {
+            'wt':
+            'fwd_adapter':,
+            'rc_datapter':,
+            'expected_length': 
         }
         # Add more TCRs as needed
     }
