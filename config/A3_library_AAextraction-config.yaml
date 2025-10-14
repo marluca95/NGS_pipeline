@@ -1,0 +1,7 @@
+pool: "P3303_LUCA"
+
+# Codon extraction
+start_anchor: "GACTCGGCCCTTTATCTT"
+end_anchor: "GGGCCGGGCACCAGGCTC"       # example end
+codons: 13
+max_mismatches: 1

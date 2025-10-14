@@ -559,19 +559,19 @@ def organize_files_at_end(output_dir, output_files, sample_id, info_df):
             # If it's a list, iterate through all files in the list
             if isinstance(final_output_file, list):
                 for file in final_output_file:
-                    final_output_path = sample_folder / f"{sample_id}_{key}.fastq.gz"
+                    final_output_path = output_dir / f"{sample_id}_{key}.fastq.gz"
                     if os.path.exists(file):
                         shutil.move(file, final_output_path)
                         print(f"Moved {file} to {final_output_path}")
             else:
-                final_output_path = sample_folder / f"{sample_id}_{key}.fastq.gz"
+                final_output_path = output_dir / f"{sample_id}_{key}.fastq.gz"
                 if os.path.exists(final_output_file):
                     shutil.move(final_output_file, final_output_path)
                     print(f"Moved {final_output_file} to {final_output_path}")
 
     # Move CSV files to the sample folder (info_df, read_df)
     if info_df is not None:
-        info_csv_path = sample_folder / f"{sample_id}_info_df.csv"
+        info_csv_path = output / f"{sample_id}_info_df.csv"
         info_df.to_csv(info_csv_path, index=False)
         print(f"Moved {sample_id}_info_df.csv to {info_csv_path}")
 
@@ -1016,7 +1016,7 @@ def main():
                 # print(f"Number of reads after combining: {combined_reads}")
                 # print(f"Number of reads after final filtering: {final_filtered_count}")
 
-                organize_files_at_end(sample_output_dir, output_files, sample_id, info_df)
+                #organize_files_at_end(sample_output_dir, output_files, sample_id, info_df)
 
                 del extraction_result, combined_files
                 # del filtered_reads, initial_R1_reads, repaired_R1_reads, trimmed_R1_reads, merged_reads, final_filtered_count

@@ -1,8 +1,14 @@
 Bio
 fuzzysearch
+ipykernel
+jupyter
+notebook
 Levenshtein
+matplotlib
 pandas
 pybis
 PyYAML
+seaborn
 torch
+difflib
 #-e .

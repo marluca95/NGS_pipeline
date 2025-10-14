@@ -1,0 +1,7 @@
+sample_name: "GFB-59056"
+pool: "P3303_LUCA"
+
+# UMI parameters
+umi_length: 12
+anchor_sequence: "TCAGGGCGCCAGTTCTCTAACTC"
+max_mismatches: 1

@@ -1,18 +1,17 @@
 quality_threshold: 20
 min_length: 50
-expected_length: 269 #??? wt + UMI
-seq_threshold: 1
-qtrim: "r"
-
-#fwd_adapter: "CACGACCACCCGGTATGG" # RK_CHL_123C_rev_V2 primer bind !!! forward and reverse directions are switched in Aviti!
-#rc_adapter: "CACCTCATCGCCTCTAATTACG" #reverse complement of RK_CHL_123C_fwd_V2 primer bind
-fwd_adapter: "GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG" # RK: CGTAATTAGAGGCGATGAGGTG
-rc_adapter: "TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG" # RK: CCATACCGGGTGGTCGTG
-
-wt: "TCAGGGCGCCAGTTCTCTAACTCTCGCTCTGAGATGAATGTGAGCACCTTGGAGCTGGGGGACTCGGCCCTTTATCTTTGCGCCAGCAGCCCGAATATGGCGGATGAACAGTACTTCGGGCCGGGCACCAGGCTCACGGTCACAGGTAAGGCTGGGGGTCTATAGGAGGGGTGCGATGAGGGAGGACTCTGTCCTGGGAAATGTCAAAGAGAACAGAGATCCCAGCTCCCGGAGCCAGACTGAGGGAGACGTCATGT"
+expected_length: 269
+seq_threshold: 5
+qtrim: r
+wt: TCAGGGCGCCAGTTCTCTAACTCTCGCTCTGAGATGAATGTGAGCACCTTGGAGCTGGGGGACTCGGCCCTTTATCTTTGCGCCAGCAGCCCGAATATGGCGGATGAACAGTACTTCGGGCCGGGCACCAGGCTCACGGTCACAGGTAAGGCTGGGGGTCTATAGGAGGGGTGCGATGAGGGAGGACTCTGTCCTGGGAAATGTCAAAGAGAACAGAGATCCCAGCTCCCGGAGCCAGACTGAGGGAGACGTCATGT
+fwd_adapter: GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG
+rc_adapter: TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG
 repair: true
 trim: true
 filter: true
-input_dir: "/cluster/project/reddy/marluca/NGS_pipeline/data/p3303_LUCA/"
-output_dir: "/cluster/project/reddy/marluca/NGS_pipeline/output/GFB-59053"
-bbmap_dir: "/cluster/project/reddy/marluca/NGS_pipeline/bbmap"
+pool: P3303_LUCA
+sample_id: '59053'
+TCR: A3
+input_dir: /cluster/project/reddy/marluca/NGS_pipeline/data/raw/P3303_LUCA
+output_dir: /cluster/project/reddy/marluca/NGS_pipeline/data/processed/P3303_LUCA
+bbmap_dir: /cluster/project/reddy/marluca/NGS_pipeline/bbmap
