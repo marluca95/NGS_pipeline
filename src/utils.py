@@ -33,7 +33,7 @@ def check_sequence_similarity(ref: str, query: str, max_dist: int, tiled: bool) 
     if dist > max_dist:
         return False
 
-    # --- 2️⃣ If tiled=True, check edit locality ---
+    # --- If tiled=True, check edit locality ---
     if tiled:
         matcher = difflib.SequenceMatcher(None, ref, query)
         edits = []
