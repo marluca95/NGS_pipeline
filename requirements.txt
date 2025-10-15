@@ -10,5 +10,7 @@ pybis
 PyYAML
 seaborn
 torch
-difflib
+logomaker
+scikit-learn
+umap-learn
 #-e .
