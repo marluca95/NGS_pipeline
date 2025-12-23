@@ -11,10 +11,10 @@ def generate_yaml(pool, sample_id, tcr='A3'):
             'expected_length': 269
         },
         'DMF5': {
-            'wt':
-            'fwd_adapter':,
-            'rc_datapter':,
-            'expected_length': 
+            'wt': "",
+            'fwd_adapter': "",
+            'rc_datapter': "",
+            'expected_length': "" 
         }
         # Add more TCRs as needed
     }

@@ -10,7 +10,7 @@ try:
     parser.add_argument('--username', help='Enter openBis username', required=True)
     parser.add_argument('--password', help='Enter openBis password', required=True)
     parser.add_argument('--path_to_output', help='Path to the output folder', required=True)
-    parser.add_argument('--pool_id', help='ID of the pool in openBIS(e.g. /GFB/POOL-1)', required=True)
+    parser.add_argument('--pool_id', help='ID of the pool in openBIS(e.g. /BSSE_BIIE_REDDY_MASON/POOL-1195)', required=True)
     parser.add_argument('--flowcell_id',help='ID of the flowcell. You can find this value in the notification of NGSvivo(e.g. Flowcell: 000000000-DM2VM). It is not mandatory. To use only in case the user wants to download sample data of a single flowcell.',
                         required=False)
     parser.add_argument('--token',help='For no ETH users to login to openBIS is mandatory to follow these instruction to get the token: ',
@@ -63,12 +63,20 @@ try:
 
                         output_dir = os.path.abspath(path_to_output)
 
+                        dataset_path = os.path.join(output_dir, dataset.code)
+
+                        if os.path.exists(dataset_path):
+                            print(f"Dataset {dataset.code} already exists. Skipping download.")
+                            continue   
+
                         if flowcell_id:
                             pattern = sample_data.code + "_" + flowcell_id
                             ds = o.get_dataset(dataset.code)
                             sss = ds.file_list
 
                             if any(pattern in s for s in sss):
+
+
                                 print(f"Downloading dataset {dataset.code} of sample {sample_data.code}...")
                                 if dataset.download(destination=output_dir):
                                     print(f"Dataset {dataset.code} downloaded successfully!")

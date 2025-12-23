@@ -1,0 +1,17 @@
+quality_threshold: 20
+min_length: 50
+expected_length: 269
+seq_threshold: 5
+qtrim: r
+wt: TCAGGGCGCCAGTTCTCTAACTCTCGCTCTGAGATGAATGTGAGCACCTTGGAGCTGGGGGACTCGGCCCTTTATCTTTGCGCCAGCAGCCCGAATATGGCGGATGAACAGTACTTCGGGCCGGGCACCAGGCTCACGGTCACAGGTAAGGCTGGGGGTCTATAGGAGGGGTGCGATGAGGGAGGACTCTGTCCTGGGAAATGTCAAAGAGAACAGAGATCCCAGCTCCCGGAGCCAGACTGAGGGAGACGTCATGT
+fwd_adapter: GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG
+rc_adapter: TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG
+repair: true
+trim: true
+filter: true
+pool: P3408_LUCA
+sample_id: '61827'
+TCR: A3
+input_dir: /cluster/project/reddy/marluca/NGS_pipeline/data/raw/P3408_LUCA
+output_dir: /cluster/project/reddy/marluca/NGS_pipeline/data/processed/P3408_LUCA
+bbmap_dir: /cluster/project/reddy/marluca/NGS_pipeline/bbmap

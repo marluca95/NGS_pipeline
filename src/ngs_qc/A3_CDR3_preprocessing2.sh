@@ -13,7 +13,7 @@
 #SBATCH --array=0-3  # number of samples minus one
 
 # Minimal sample identifiers
-SAMPLES=("59053" "59054" "59055" "59056")
+SAMPLES=("61827")
 
 # Pick the current sample based on SLURM_ARRAY_TASK_ID
 SAMPLE_PREFIX="GFB-${SAMPLES[$SLURM_ARRAY_TASK_ID]}"
