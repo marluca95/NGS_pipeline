@@ -1,6 +1,8 @@
 # Virtual enironments
-
 venv/
+
+# Tools
+bbmap/
 
 # Python cache files
 __pycache__/
@@ -17,6 +19,7 @@ Thumbs.db
 
 # Logs
 *.logs
+logs
 
 # Data
 data/
