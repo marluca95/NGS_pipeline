@@ -5,9 +5,7 @@ from pathlib import Path
 import csv
 import yaml
 from fuzzysearch import find_near_matches
-
-from ngs_qc.logger import Logger   # <-- your custom logger
-
+from ngs_qc.logger import Logger   # custom logger
 
 def fuzzy_find(seq, pattern, max_dist=1):
     """Return start of first approximate match to pattern in seq, else -1."""
@@ -64,12 +62,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Extract codon sequences and translate to amino acids")
     parser.add_argument("--config", required=True, help="Path to YAML config file")
-    parser.add_argument(
-        "--consensus_mode",
-        required=False,
-        default="no_consensus",
-        help="Specify consensus mode (topk_x, min_x, or no_consensus)"
-    )
+    parser.add_argument("--consensus_mode", required=False, default="no_consensus", help="Specify consensus mode (topk_x, min_x, or no_consensus)")
     args = parser.parse_args()
 
     # Load config
@@ -133,4 +126,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

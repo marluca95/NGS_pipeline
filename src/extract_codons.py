@@ -112,6 +112,5 @@ def main():
                        codons=codons, max_dist=max_dist,
                        logger=logger)
 
-
 if __name__ == "__main__":
     main()
