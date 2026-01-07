@@ -1,0 +1,25 @@
+# Global pipeline parameters (applies to all samples)
+quality_threshold: 20
+min_length: 50
+expected_length: 269
+seq_threshold: 5
+qtrim: r
+wt: TCAGGGCGCCAGTTCTCTAACTCTCGCTCTGAGATGAATGTGAGCACCTTGGAGCTGGGGGACTCGGCCCTTTATCTTTGCGCCAGCAGCCCGAATATGGCGGATGAACAGTACTTCGGGCCGGGCACCAGGCTCACGGTCACAGGTAAGGCTGGGGGTCTATAGGAGGGGTGCGATGAGGGAGGACTCTGTCCTGGGAAATGTCAAAGAGAACAGAGATCCCAGCTCCCGGAGCCAGACTGAGGGAGACGTCATGT
+
+# Adapter info
+fwd_adapter: GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG
+rc_adapter: TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG
+
+# Pipeline steps
+repair: false
+trim: true
+filter: true
+
+#pool: P3303_LUCA
+#sample_id: '59053'
+#TCR: A3
+
+# Paths
+input_dir: /cluster/project/reddy/marluca/NGS_pipelinedata/raw/P3408_LUCA-TCRA3
+output_dir: /cluster/project/reddy/marluca/NGS_pipeline/data/processed/P3408_LUCA
+bbmap_dir: /cluster/project/reddy/marluca/NGS_pipeline/bbmap
