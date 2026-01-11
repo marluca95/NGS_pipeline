@@ -239,7 +239,7 @@ res_df.to_csv(os.path.join(args.output_dir, "metrics.csv"), index=False)
 # Plot metrics
 # -------------------------
 plt.figure(figsize=(10, 5))
-res_df.set_index("model")[["AUROC", "PR_AUC", "MCC", "Recall"]].plot(kind="bar")
+res_df.set_index("model")[["AUROC", "PR_AUC", "MCC"]].plot(kind="bar")
 plt.ylabel("Score")
 plt.tight_layout()
 plt.savefig(os.path.join(args.output_dir, "metrics_barplot.png"))
