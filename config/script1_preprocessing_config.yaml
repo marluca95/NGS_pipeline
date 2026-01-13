@@ -1,0 +1,7 @@
+output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/processed/P3303_LUCA
+bbmap_dir: /cluster/project/reddy/marluca/NGS_pipeline/bbmap
+
+trim: true
+qtrim: r
+quality_threshold: 20
+min_length: 190
