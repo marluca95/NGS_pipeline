@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=cdr3_eda_a100
-#SBATCH --output=/cluster/project/reddy/marluca/NGS_pipeline/logs/cdr3_eda_%A_%a.out
-#SBATCH --error=/cluster/project/reddy/marluca/NGS_pipeline/logs/cdr3_eda_%A_%a.err
+#SBATCH --output=/cluster/project/reddy/marluca/NGS_pipeline/logs/cdr3_ml_imb_%A_%a.out
+#SBATCH --error=/cluster/project/reddy/marluca/NGS_pipeline/logs/cdr3_ml_imb_%A_%a.err
 #SBATCH --mem-per-cpu=32G
 #SBATCH --cpus-per-task=8
 #SBATCH --ntasks=1
@@ -20,4 +20,4 @@ source /cluster/project/reddy/marluca/NGS_pipeline/venv/bin/activate
 OUTPUT_DIR="/cluster/project/reddy/marluca/NGS_pipeline/data/results"
 mkdir -p $OUTPUT_DIR
 
-python /cluster/project/reddy/marluca/NGS_pipeline/src/ml/cdr3b_eda.py --data_csv /cluster/project/reddy/marluca/NGS_pipeline/data/TCR-A3_CDR3b-t4x_MAGE-A3_specificity.csv --output_dir $OUTPUT_DIR
+python /cluster/project/reddy/marluca/NGS_pipeline/src/ml/cdr3b_ml_imbsamp.py --data_csv /cluster/project/reddy/marluca/NGS_pipeline/data/TCR-A3_CDR3b-t4x_MAGE-A3_specificity.csv --output_dir $OUTPUT_DIR --oversample_pos --undersample_neg --target_pos_frac 0.3

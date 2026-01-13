@@ -13,4 +13,5 @@ torch
 logomaker
 scikit-learn
 umap-learn
+imblearn
 #-e .
