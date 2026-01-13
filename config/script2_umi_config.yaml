@@ -1,0 +1,19 @@
+# where trimmed+combined FASTQs live
+output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/processed/P3303_LUCA
+sample_sheet: /cluster/project/reddy/katja/NGS_pipeline/src/ngs_qc/samples.tsv
+logs_dir: /cluster/project/reddy/katja/NGS_pipeline/logs
+
+# UMI parameters (same as before)
+umi_length: 12
+#anchor_sequence: "TCAGGGCGCCAGTTCTCTAACTC"
+anchor_sequence: "ACATGACGTCTCCCTCAGTC"
+max_mismatches: 1
+
+# optional but sensible defaults
+min_reads_per_umi: 2
+soft_top_k: 1
+soft_cumulative_frac: 0.9
+soft_min_count: 2
+
+# naming convention from previous step
+combined_suffix: "_combined_trimmed.fastq.gz"
