@@ -1,0 +1,16 @@
+#paths:
+processed_base_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/processed/P3303_LUCA"
+extracted_base_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/extracted/P3303_LUCA"
+sample_sheet: "/cluster/project/reddy/katja/NGS_pipeline/src/ngs_qc/samples.tsv"
+logs_dir: "/cluster/project/reddy/katja/NGS_pipeline/logs"
+
+#codon_extraction:
+start_anchor: "CCTGGTGCCCGGCCCGAA"
+end_anchor: "GCAAAGATA"
+
+codons: 11
+max_mismatches: 1
+
+#fastq_patterns:
+no_consensus: "*_combined_final.fastq.gz"
+consensus: "umi/*_consensus_{consensus_mode}.fastq.gz"
