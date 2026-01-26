@@ -26,6 +26,8 @@ def collect_fastq_metadata(root: str) -> pd.DataFrame:
                     f
                 )
 
+                full_path = os.path.join(dirpath, f)
+
                 if match:
                     sample_id, _, sample_name, lane, read = match.groups()
 
@@ -42,7 +44,7 @@ def collect_fastq_metadata(root: str) -> pd.DataFrame:
                         "run_depth": run_depth,
                         "lane": lane,
                         "read": read,
-                        "fastq_full_name": f
+                        "fastq": full_path,
                     })
                 else:
                     unmatched_files.append(os.path.join(dirpath, f))
@@ -63,16 +65,16 @@ def collect_fastq_metadata(root: str) -> pd.DataFrame:
 
     df = pd.DataFrame(rows)
 
-    # sort nicely for downstream pipelines
+    # sort for downstream pipelines
     df = df.sort_values(["sample_id", "sample_name", "lane", "read"])
 
     return df
 
 
 if __name__ == "__main__":
-    root_dir: str = "/cluster/project/reddy/marluca/NGS_pipeline/data/raw/P3408_LUCA-TCRA3"
+    root_dir: str = "/cluster/project/reddy/katja/data/raw/P3481_LUCA-TCRDMF5"
     df_samples: pd.DataFrame = collect_fastq_metadata(root_dir)
-    df_samples.to_csv("samples.tsv", sep="\t", index=False)
+    df_samples.to_csv("P3481_LUCA-TCRDMF5_samples.tsv", sep="\t", index=False)
 
     logging.info("Metadata extraction complete. First few rows:")
     print(df_samples.head())

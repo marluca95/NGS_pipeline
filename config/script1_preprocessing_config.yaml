@@ -1,7 +1,10 @@
-output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/processed/P3303_LUCA
-bbmap_dir: /cluster/project/reddy/marluca/NGS_pipeline/bbmap
+# Paths where trimmed + combined FASTQs should be written
+output_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/processed"
+logs_dir: "/cluster/project/reddy/katja/NGS_pipeline/logs/P3408_LUCA-TCRA3"
+bbmap_dir: "/cluster/project/reddy/marluca/NGS_pipeline/bbmap"
 
+# Trimming parameters (BBMap)
 trim: true
-qtrim: r
+qtrim: "r"
 quality_threshold: 20
 min_length: 190

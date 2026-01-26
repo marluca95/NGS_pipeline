@@ -1,16 +1,15 @@
-#paths:
-processed_base_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/processed/P3303_LUCA"
-extracted_base_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/extracted/P3303_LUCA"
-sample_sheet: "/cluster/project/reddy/katja/NGS_pipeline/src/ngs_qc/samples.tsv"
-logs_dir: "/cluster/project/reddy/katja/NGS_pipeline/logs"
+# Paths
+processed_base_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/processed"
+extracted_base_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA/extracted/"
+logs_dir: "/cluster/project/reddy/katja/NGS_pipeline/logs/P3408_LUCA-TCRA3"
+sample_sheet: "/cluster/project/reddy/katja/NGS_pipeline/scripts/samples.tsv"
 
-#codon_extraction:
+# Codon extraction settings
 start_anchor: "CCTGGTGCCCGGCCCGAA"
 end_anchor: "GCAAAGATA"
-
-codons: 11
 max_mismatches: 1
+codons: 11
 
-#fastq_patterns:
+# Input FASTQ patterns
 no_consensus: "*_combined_final.fastq.gz"
 consensus: "umi/*_consensus_{consensus_mode}.fastq.gz"
