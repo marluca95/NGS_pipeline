@@ -1,18 +1,29 @@
 # Paths where trimmed + combined FASTQs live (input for UMI/consensus steps)
-output_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/processed"
-sample_sheet: "/cluster/project/reddy/katja/NGS_pipeline/scripts/samples.tsv"
-logs_dir: "/cluster/project/reddy/katja/NGS_pipeline/logs/P3408_LUCA-TCRA3"
+input_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/processed/27_01_2026_minLenght191_QScore20"
+sample_sheet: "/cluster/project/reddy/katja/NGS_pipeline/scripts/P3408_LUCA-TCRA3_samples.tsv"
+output_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/umi/30_01_2026_FULLRUN"
+logs_dir: "/cluster/project/reddy/katja/NGS_pipeline/logs/P3408_LUCA-TCRA3/30_01_2026_FULLRUN"
 
 # UMI extraction / matching
 umi_length: 12
-anchor_sequence: "ACATGACGTCTCCCTCAGTC"
+anchor_sequence: "ACATGACGTCTCCCTCAGTC" #In or case:binding region of primer
 max_mismatches: 1
 
-# Consensus calling defaults (sensible, optional)
+# Consensus calling defaults
 min_reads_per_umi: 2
-soft_top_k: 1
-soft_cumulative_frac: 0.9
-soft_min_count: 2
 
 # Suffix produced by the previous step (trim + combine)
 combined_suffix: "_combined_trimmed.fastq.gz"
+
+# Whether to add "|n=<count>" to FASTQ header (default: True)
+write_readcount_in_header: true
+
+# Library layout: allowed spacer range (default: 0–3)
+spacer_min: 0
+spacer_max: 3
+
+# Posterior consensus threshold (default: 2.0)
+posterior_min_log_delta: 2.0
+
+# Placeholder quality character for consensus FASTQ (default: "I")
+consensus_placeholder_qual_char: "I"
