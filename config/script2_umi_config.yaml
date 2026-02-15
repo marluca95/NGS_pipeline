@@ -2,7 +2,7 @@
 input_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/processed/27_01_2026_minLenght191_QScore20"
 sample_sheet: "/cluster/project/reddy/katja/NGS_pipeline/scripts/P3408_LUCA-TCRA3_samples.tsv"
 output_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/umi/30_01_2026_FULLRUN"
-logs_dir: "/cluster/project/reddy/katja/NGS_pipeline/logs/P3408_LUCA-TCRA3/30_01_2026_FULLRUN"
+logs_dir: "/cluster/project/reddy/katja/NGS_pipeline/logs/P3408_LUCA-TCRA3/30_01_2026_FULLRUN/19"
 
 # UMI extraction / matching
 umi_length: 12

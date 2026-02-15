@@ -43,10 +43,10 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
-import pandas as pd
-import yaml
 from Bio import SeqIO
 from fuzzysearch import find_near_matches
+from utils.config_utils import load_yaml_config, require_config_keys
+from utils.sample_utils import load_sample_sheet
 
 
 # -------- logging --------
@@ -68,13 +68,11 @@ logger = logging.getLogger(__name__)
 
 # -------- config / IO helpers --------
 def parse_yaml(yaml_file: str) -> dict:
-    with open(yaml_file, "r") as f:
-        cfg = yaml.safe_load(f) or {}
-
-    required = ["sample_sheet", "input_dir", "output_dir", "umi_length", "anchor_sequence"]
-    missing = [k for k in required if k not in cfg]
-    if missing:
-        raise ValueError(f"Missing required YAML keys: {missing}")
+    cfg = load_yaml_config(yaml_file)
+    require_config_keys(
+        cfg,
+        ["sample_sheet", "input_dir", "output_dir", "umi_length", "anchor_sequence"],
+    )
 
     cfg.setdefault("logs_dir", str(Path(cfg["output_dir"]) / "_logs"))
 
@@ -95,23 +93,6 @@ def parse_yaml(yaml_file: str) -> dict:
     cfg.setdefault("consensus_placeholder_qual_char", "I")
 
     return cfg
-
-
-def load_sample_sheet(sample_sheet_path: str) -> pd.DataFrame:
-    try:
-        df = pd.read_csv(sample_sheet_path, sep="\t")
-        if df.shape[1] == 1:
-            df = pd.read_csv(sample_sheet_path)
-    except Exception:
-        df = pd.read_csv(sample_sheet_path)
-
-    required = {"sample_id", "sample_name"}
-    missing = required - set(df.columns)
-    if missing:
-        raise ValueError(
-            f"Sample sheet missing required columns: {missing}. Found: {str(list(df.columns))}"
-        )
-    return df
 
 
 def phred_to_fastq_ascii(phred: List[int]) -> str:
@@ -479,7 +460,7 @@ def main() -> None:
     log_file = setup_logging(logs_dir)
     logger.info(f"Logging to: {log_file}")
 
-    df = load_sample_sheet(cfg["sample_sheet"])
+    df = load_sample_sheet(cfg["sample_sheet"], required_cols=("sample_id", "sample_name"))
 
     if args.sample_id is not None:
         df = df[df["sample_id"].astype(str) == str(args.sample_id)]

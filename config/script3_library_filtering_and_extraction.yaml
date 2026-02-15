@@ -1,0 +1,56 @@
+# ================= OUTPUT =================
+output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/extracted
+
+# (Not needed anymore when using --sample_id, but kept for fallback mode)
+output_prefix: PLACEHOLDER
+
+
+# ================= Anchor / extraction =================
+anchor_sequence: "CCTGGTGCCCGGCCCGAA"
+anchor_max_mismatches: 0
+region_length_nt: 33
+
+
+# ================= Filtering / outputs =================
+drop_if_contains_N: true
+write_fail_fastq: true
+write_aa_tsv: true
+
+
+# ================= Library validation =================
+library_mode: combinatorial   # combinatorial or 3xNNK
+
+# ---- Combinatorial design codons (DESIGN ORIENTATION) ----
+degenerate_codons:
+  - "SCN"
+  - "RGY"
+  - "RGY"
+  - "VNB"
+  - "ARY"
+  - "VNB"
+  - "GYN"
+  - "RRY"
+  - "GRR"
+  - "CWR"
+  - "TWY"
+
+# ---- 3xNNK specifics (only used if library_mode: 3xNNK) ----
+WT_nt_33: "ACTGACTGACTGACTGACTGACTGACTGACTGA"   # replace with EXACT 33 nt
+max_mutated_codons: 3
+
+
+# ================= Sample-driven input =================
+
+# Mapping from sample_id -> sample_name
+samples_tsv: /cluster/project/reddy/katja/NGS_pipeline/scripts/P3408_LUCA-TCRA3_samples.tsv
+
+# Folder containing processed FASTQs
+input_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/umi/30_01_2026_FULLRUN
+
+# File endings to look for
+# If one is empty ("") it will be skipped.
+# If BOTH are empty -> script throws error.
+# If suffix is set but file is missing -> error.
+
+input_suffixes_consensus: "_consensus.fastq.gz"     # set "" to disable
+input_suffixes_singletons: "_singletons_rescued.fastq.gz"   # set "" to disable
