@@ -8,39 +8,29 @@ from collections import defaultdict
 
 import pandas as pd
 from Bio import SeqIO
-from utils.config_utils import load_yaml_config, require_config_keys
+from utils.config_utils import load_pipeline_config
+from utils.logging_utils import setup_pipeline_logging
 from utils.sample_utils import load_sample_sheet
 
-
-# ---------------- logging ----------------
-def setup_logging(logs_dir: Path, log_name: str = "script2a_singleton_rescue.log") -> Path:
-    logs_dir.mkdir(parents=True, exist_ok=True)
-    log_file = logs_dir / log_name
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        handlers=[logging.FileHandler(log_file), logging.StreamHandler()],
-        force=True,
-    )
-    return log_file
-
-
+SCRIPT_NAME = "script2a_singleton_rescue"
 logger = logging.getLogger(__name__)
 
 
 # ---------------- config / IO ----------------
 def parse_yaml(path: str) -> dict:
-    cfg = load_yaml_config(path)
-    require_config_keys(cfg, ["samples_tsv", "singleton_dir", "output_dir", "wt_anchor"])
-
-    cfg.setdefault("var_len", 33)
-    cfg.setdefault("min_umis", 2)
-    cfg.setdefault("singleton_suffix", "_singletons.fastq.gz")
-
-    # logging dir
-    cfg.setdefault("logs_dir", str(Path(cfg["output_dir"]).parent / "_logs"))
-
+    cfg = load_pipeline_config(
+        path,
+        required_keys=("samples_tsv", "singleton_dir", "output_dir", "wt_anchor"),
+        default_values={
+            "var_len": 33,
+            "min_umis": 2,
+            "singleton_suffix": "_singletons.fastq.gz",
+            "logs_dir": None,
+        },
+        path_keys=("samples_tsv", "singleton_dir", "output_dir", "logs_dir"),
+    )
+    if not cfg.get("logs_dir"):
+        cfg["logs_dir"] = str(Path(cfg["output_dir"]).parent / "_logs")
     return cfg
 
 
@@ -163,9 +153,14 @@ def main():
     cfg = parse_yaml(args.yaml_config)
 
     # logging
-    log_file = setup_logging(Path(cfg["logs_dir"]))
-    logger.info(f"Logging to: {log_file}")
-    logger.info(f"Using config: {args.yaml_config}")
+    log_file = setup_pipeline_logging(
+        logs_dir=cfg["logs_dir"],
+        script_name=SCRIPT_NAME,
+        scope="run",
+        run_label=cfg.get("run_label"),
+    )
+    logger.info("Logging to: %s", log_file)
+    logger.info("Using config: %s", cfg.get("_config_path", args.yaml_config))
 
     df = load_samples(cfg["samples_tsv"])
     logger.info(f"Loaded {len(df)} unique samples from {cfg['samples_tsv']}")

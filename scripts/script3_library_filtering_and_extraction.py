@@ -11,7 +11,8 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.Data import IUPACData
 from fuzzysearch import find_near_matches
-from utils.config_utils import load_yaml_config, require_config_keys
+from utils.config_utils import load_pipeline_config
+from utils.logging_utils import setup_pipeline_logging
 from utils.sample_utils import load_sample_sheet
 
 
@@ -22,44 +23,52 @@ IUPAC: Dict[str, set] = {k: set(v) for k, v in IUPACData.ambiguous_dna_values.it
 # ---- IMPORTANT: design-orientation codons from the paper/figure ----
 DEFAULT_DEG_CODONS = ["SCN", "RGY", "RGY", "VNB", "ARY", "VNB", "GYN", "RRY", "GRR", "CWR", "TWY"]
 ALLOWED_LIBRARY_MODES = {"combinatorial", "3xNNK"}
+SCRIPT_NAME = "script3_library_filtering_and_extraction"
+logger = logging.getLogger(__name__)
 
 
 # ---------------- utility ----------------
-def setup_logging(out_dir: Path) -> None:
-    out_dir.mkdir(parents=True, exist_ok=True)
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s",
+def setup_logging(cfg: dict) -> Path:
+    logs_dir = cfg.get("logs_dir") or (Path(cfg["output_dir"]) / "_logs")
+    return setup_pipeline_logging(
+        logs_dir=logs_dir,
+        script_name=SCRIPT_NAME,
+        scope="run",
+        run_label=cfg.get("run_label"),
     )
 
 
 def parse_yaml(path: str) -> dict:
-    cfg = load_yaml_config(path)
-    required = [
-        "output_dir",
-        "anchor_sequence",
-        "anchor_max_mismatches",
-        "region_length_nt",
-        "drop_if_contains_N",
-        "write_fail_fastq",
-        "library_mode",
-        # sample-driven pieces (you always run with --sample_id)
-        "samples_tsv",
-        "input_dir",
-        # flat suffix keys (at least one must be present/non-empty)
-        "input_suffixes_consensus",
-        "input_suffixes_singletons",
-    ]
-    require_config_keys(cfg, required)
+    cfg = load_pipeline_config(
+        path,
+        required_keys=(
+            "output_dir",
+            "anchor_sequence",
+            "anchor_max_mismatches",
+            "region_length_nt",
+            "drop_if_contains_N",
+            "write_fail_fastq",
+            "library_mode",
+            "samples_tsv",
+            "input_dir",
+            "input_suffixes_consensus",
+            "input_suffixes_singletons",
+        ),
+        default_values={
+            "max_mutated_codons": 3,
+            "write_aa_tsv": True,
+            "logs_dir": None,
+        },
+        path_keys=("output_dir", "samples_tsv", "input_dir", "logs_dir"),
+    )
 
     mode = str(cfg["library_mode"]).strip()
     if mode not in ALLOWED_LIBRARY_MODES:
         raise ValueError(f"Invalid library_mode='{mode}'. Must be one of: {sorted(ALLOWED_LIBRARY_MODES)}")
 
-    # defaults
     cfg.setdefault("degenerate_codons", DEFAULT_DEG_CODONS)
-    cfg.setdefault("max_mutated_codons", 3)
-    cfg.setdefault("write_aa_tsv", True)
+    if not cfg.get("logs_dir"):
+        cfg["logs_dir"] = str(Path(cfg["output_dir"]) / "_logs")
 
     # mode-specific checks
     if mode == "combinatorial":
@@ -475,8 +484,9 @@ def main():
 
     cfg = parse_yaml(args.yaml_config)
 
-    out_dir = Path(cfg["output_dir"])
-    setup_logging(out_dir)
+    log_path = setup_logging(cfg)
+    logger.info("Logging to: %s", log_path)
+    logger.info("Loaded config: %s", cfg.get("_config_path", args.yaml_config))
 
     prefix, input_fastqs = resolve_inputs_for_sample(cfg, sample_id=str(args.sample_id))
     logging.info(f"Resolved sample_id={args.sample_id} -> output_prefix={prefix}")
@@ -491,6 +501,7 @@ def main():
     write_aa_tsv = bool(cfg.get("write_aa_tsv", True))
 
     strategy = build_strategy(cfg)
+    out_dir = Path(cfg["output_dir"])
 
     process_fastqs(
         input_paths=input_fastqs,

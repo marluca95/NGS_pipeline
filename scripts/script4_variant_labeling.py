@@ -6,42 +6,36 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
-from utils.config_utils import load_yaml_config, require_config_keys
+from utils.config_utils import load_pipeline_config
+from utils.logging_utils import setup_pipeline_logging
 
-
+SCRIPT_NAME = "script4_variant_labeling"
 logger = logging.getLogger(__name__)
 
 
-def setup_logging(output_dir: Path, logs_subdir: str, log_name: str) -> Path:
-    log_dir = output_dir / logs_subdir
-    log_dir.mkdir(parents=True, exist_ok=True)
-    log_path = log_dir / log_name
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        handlers=[logging.FileHandler(log_path), logging.StreamHandler()],
-        force=True,
-    )
-    return log_path
-
-
 def parse_yaml(yaml_path: str) -> dict:
-    cfg = load_yaml_config(yaml_path)
-    require_config_keys(cfg, ["input_dir", "output_dir"])
-
-    cfg.setdefault("input_glob", "*.filtered.PASS.aa.tsv")
-    cfg.setdefault("aa_column", "aa_seq")
-    cfg.setdefault("pseudocount", 1e-9)
-    cfg.setdefault("logs_subdir", "_logs")
-    cfg.setdefault("log_name", "script4_variant_labeling.log")
-
-    cfg.setdefault("lib_suffix", "originallib")
-    cfg.setdefault("neg_suffix", "2xnegative")
-    cfg.setdefault("pos3x_suffix", "3xpositive")
-    cfg.setdefault("pos1x_suffix", "31xpositive")
-    cfg.setdefault("required_conditions", ["neg", "pos3x", "pos1x"])
-
+    cfg = load_pipeline_config(
+        yaml_path,
+        required_keys=("input_dir", "output_dir"),
+        default_values={
+            "input_glob": "*.filtered.PASS.aa.tsv",
+            "aa_column": "aa_seq",
+            "pseudocount": 1e-9,
+            "logs_subdir": "_logs",  # backward-compatible
+            "lib_suffix": "originallib",
+            "neg_suffix": "2xnegative",
+            "pos3x_suffix": "3xpositive",
+            "pos1x_suffix": "31xpositive",
+            "required_conditions": ["neg", "pos3x", "pos1x"],
+            "logs_dir": None,
+            # --- NEW: same rules as variant_analysis.ipynb ---
+            "status_up": 2.0,     # Enriched if >= 2
+            "status_down": 0.5,   # Depleted if <= 0.5
+        },
+        path_keys=("input_dir", "output_dir", "logs_dir"),
+    )
+    if not cfg.get("logs_dir"):
+        cfg["logs_dir"] = str(Path(cfg["output_dir"]) / str(cfg.get("logs_subdir", "_logs")))
     return cfg
 
 
@@ -74,7 +68,8 @@ def discover_input_files(cfg: dict) -> Tuple[Path, Dict[str, Dict[str, Path]], L
     library_file: Optional[Path] = None
 
     for path in files:
-        m = re.search(r"_clib(.+)\.filtered\.PASS\.aa\.tsv$", path.name)
+        m = re.search(r"_DMF5CDR3b(.+)\.filtered\.PASS\.aa\.tsv$", path.name)
+        # m = re.search(r"_clib(.+)\.filtered\.PASS\.aa\.tsv$", path.name)
         if not m:
             unknown.append(path)
             continue
@@ -140,6 +135,135 @@ def add_enrichment_columns(merged: pd.DataFrame, pseudocount: float, numerator: 
         merged[out_col] = (merged[ncol] + pseudocount) / (merged[dcol] + pseudocount)
 
 
+# --- NEW: same rules as variant_analysis.ipynb ---
+def flag(val: float, up: float = 2.0, down: float = 0.5) -> str:
+    if val >= up:
+        return "Enriched"
+    if val <= down:
+        return "Depleted"
+    return "NoChange"
+
+
+def combine_status(a: str, b: str) -> str:
+    """
+    Combine two statuses into one:
+      - if either is Enriched -> Enriched
+      - else if both are Depleted -> Depleted
+      - else -> NoChange
+    """
+    if a == "Enriched" or b == "Enriched":
+        return "Enriched"
+    if a == "Depleted" and b == "Depleted":
+        return "Depleted"
+    return "NoChange"
+
+
+def annotate_row(row: pd.Series) -> int:
+    """
+    Exactly as in variant_analysis.ipynb:
+
+    if ((pos_vs_neg_status == Enriched OR pos_vs_lib_status == Enriched) AND neg_vs_lib_status != Enriched) -> 1
+    elif ((pos_vs_neg_status != Enriched AND pos_vs_lib_status != Enriched) AND neg_vs_lib_status == Enriched) -> 0
+    else -> 2
+    """
+    if (
+        (row["pos_vs_neg_status"] == "Enriched" or row["pos_vs_lib_status"] == "Enriched")
+        and row["neg_vs_lib_status"] != "Enriched"
+    ):
+        return 1
+    if (
+        (row["pos_vs_neg_status"] != "Enriched" and row["pos_vs_lib_status"] != "Enriched")
+        and row["neg_vs_lib_status"] == "Enriched"
+    ):
+        return 0
+    return 2
+
+def add_status_and_specificity(merged: pd.DataFrame, cfg: dict) -> None:
+    up = float(cfg.get("status_up", 2.0))
+    down = float(cfg.get("status_down", 0.5))
+
+    # Always required:
+    base_needed = [
+        "enrich_pos3x_vs_neg",
+        "enrich_pos3x_vs_lib",
+        "deplete_neg_lib",
+    ]
+    missing = [c for c in base_needed if c not in merged.columns]
+    if missing:
+        raise ValueError(f"Missing required enrichment columns for labeling: {missing}")
+
+    # Per-condition statuses for pos3x
+    merged["pos3x_vs_neg_status"] = merged["enrich_pos3x_vs_neg"].apply(lambda v: flag(float(v), up, down))
+    merged["pos3x_vs_lib_status"] = merged["enrich_pos3x_vs_lib"].apply(lambda v: flag(float(v), up, down))
+
+    # If pos1x exists, combine; otherwise just use pos3x
+    has_pos1x = ("enrich_pos1x_vs_neg" in merged.columns) and ("enrich_pos1x_vs_lib" in merged.columns)
+
+    if has_pos1x:
+        merged["pos1x_vs_neg_status"] = merged["enrich_pos1x_vs_neg"].apply(lambda v: flag(float(v), up, down))
+        merged["pos1x_vs_lib_status"] = merged["enrich_pos1x_vs_lib"].apply(lambda v: flag(float(v), up, down))
+
+        merged["pos_vs_neg_status"] = [
+            combine_status(a, b) for a, b in zip(merged["pos3x_vs_neg_status"], merged["pos1x_vs_neg_status"])
+        ]
+        merged["pos_vs_lib_status"] = [
+            combine_status(a, b) for a, b in zip(merged["pos3x_vs_lib_status"], merged["pos1x_vs_lib_status"])
+        ]
+    else:
+        merged["pos_vs_neg_status"] = merged["pos3x_vs_neg_status"]
+        merged["pos_vs_lib_status"] = merged["pos3x_vs_lib_status"]
+
+    merged["neg_vs_lib_status"] = merged["deplete_neg_lib"].apply(lambda v: flag(float(v), up, down))
+    merged["specificity"] = merged.apply(annotate_row, axis=1)
+
+# def add_status_and_specificity(merged: pd.DataFrame, cfg: dict) -> None:
+#     """
+#     Adds:
+#       - deplete_neg_lib (same naming style as your old specificity CSV)
+#       - pos_vs_neg_status, pos_vs_lib_status, neg_vs_lib_status
+#       - specificity (0/1/2) using the same logic as variant_analysis.ipynb
+
+#     Because you have *two* positive conditions (pos3x and pos1x), we:
+#       - compute statuses for each (pos3x vs neg, pos1x vs neg, pos3x vs lib, pos1x vs lib)
+#       - then combine them into one pos_vs_neg_status / pos_vs_lib_status
+#         using combine_status() (Enriched if either enriched; Depleted if both depleted; else NoChange).
+#     """
+#     up = float(cfg.get("status_up", 2.0))
+#     down = float(cfg.get("status_down", 0.5))
+
+#     # Ensure needed enrichment columns exist
+#     needed = [
+#         "enrich_pos3x_vs_neg",
+#         "enrich_pos1x_vs_neg",
+#         "enrich_pos3x_vs_lib",
+#         "enrich_pos1x_vs_lib",
+#         "deplete_neg_lib",
+#     ]
+#     missing = [c for c in needed if c not in merged.columns]
+#     if missing:
+#         raise ValueError(f"Missing required enrichment columns for labeling: {missing}")
+
+#     # Per-condition statuses
+#     merged["pos3x_vs_neg_status"] = merged["enrich_pos3x_vs_neg"].apply(lambda v: flag(float(v), up, down))
+#     merged["pos1x_vs_neg_status"] = merged["enrich_pos1x_vs_neg"].apply(lambda v: flag(float(v), up, down))
+#     merged["pos3x_vs_lib_status"] = merged["enrich_pos3x_vs_lib"].apply(lambda v: flag(float(v), up, down))
+#     merged["pos1x_vs_lib_status"] = merged["enrich_pos1x_vs_lib"].apply(lambda v: flag(float(v), up, down))
+
+#     # Combined "pos" statuses (because you have two pos conditions)
+#     merged["pos_vs_neg_status"] = [
+#         combine_status(a, b) for a, b in zip(merged["pos3x_vs_neg_status"], merged["pos1x_vs_neg_status"])
+#     ]
+#     merged["pos_vs_lib_status"] = [
+#         combine_status(a, b) for a, b in zip(merged["pos3x_vs_lib_status"], merged["pos1x_vs_lib_status"])
+#     ]
+
+#     # neg_vs_lib_status uses deplete_neg_lib (neg vs lib fold-change)
+#     merged["neg_vs_lib_status"] = merged["deplete_neg_lib"].apply(lambda v: flag(float(v), up, down))
+
+#     # Specificity assignment (0/1/2)
+#     merged["specificity"] = merged.apply(annotate_row, axis=1)
+
+
 def build_variant_table_for_peptide(peptide_key: str, files: Dict[str, Path], cfg: dict) -> pd.DataFrame:
     aa_column = cfg["aa_column"]
     labels = ["lib", "neg", "pos3x", "pos1x"]
@@ -158,6 +282,15 @@ def build_variant_table_for_peptide(peptide_key: str, files: Dict[str, Path], cf
     add_enrichment_columns(merged, pseudocount, numerator="pos1x", denominator="neg")
     add_enrichment_columns(merged, pseudocount, numerator="pos3x", denominator="lib")
     add_enrichment_columns(merged, pseudocount, numerator="pos1x", denominator="lib")
+
+    # NEW: neg vs lib enrichment (named deplete_neg_lib to match your earlier CSV naming)
+    add_enrichment_columns(merged, pseudocount, numerator="neg", denominator="lib")
+    if "enrich_neg_vs_lib" in merged.columns:
+        merged.rename(columns={"enrich_neg_vs_lib": "deplete_neg_lib"}, inplace=True)
+
+    # NEW: statuses + specificity (0/1/2) using notebook rules
+    add_status_and_specificity(merged, cfg)
+
     return merged
 
 
@@ -169,7 +302,12 @@ def sanitize_name(name: str) -> str:
 def run(cfg: dict) -> None:
     output_dir = Path(cfg["output_dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
-    log_path = setup_logging(output_dir, cfg["logs_subdir"], cfg["log_name"])
+    log_path = setup_pipeline_logging(
+        logs_dir=cfg["logs_dir"],
+        script_name=SCRIPT_NAME,
+        scope="run",
+        run_label=cfg.get("run_label"),
+    )
     logger.info("Loaded config and started logging to %s", log_path)
 
     library_file, groups, unknown = discover_input_files(cfg)
@@ -192,6 +330,11 @@ def run(cfg: dict) -> None:
             continue
 
         table = build_variant_table_for_peptide(peptide_key, files, cfg)
+
+        # Log specificity distribution
+        spec_counts = table["specificity"].value_counts(dropna=False).to_dict()
+        logger.info("Specificity distribution for %s: %s", peptide_key, spec_counts)
+
         out_file = output_dir / f"{sanitize_name(peptide_key)}.variant_labeling.csv"
         table.sort_values(cfg["aa_column"]).to_csv(out_file, index=False)
         processed += 1
@@ -200,11 +343,14 @@ def run(cfg: dict) -> None:
             {
                 "peptide": peptide_key,
                 "n_variants": int(table.shape[0]),
+                "n_spec_1": int((table["specificity"] == 1).sum()),
+                "n_spec_0": int((table["specificity"] == 0).sum()),
+                "n_spec_2": int((table["specificity"] == 2).sum()),
                 "output_csv": str(out_file),
                 "input_lib": str(files["lib"]),
                 "input_neg": str(files["neg"]),
-                "input_pos3x": str(files["pos3x"]),
-                "input_pos1x": str(files["pos1x"]),
+                "input_pos3x": str(files.get("pos3x", "")),
+                "input_pos1x": str(files.get("pos1x", "")),
             }
         )
         logger.info("Wrote peptide table: %s (%d variants)", out_file, table.shape[0])
@@ -217,17 +363,24 @@ def run(cfg: dict) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Generate per-peptide variant labeling CSVs from extracted PASS AA tables."
+        description="Generate per-peptide variant labeling CSVs (with specificity 0/1/2) from extracted PASS AA tables."
     )
+    parser.add_argument("--yaml_config", type=str, default=None, help="Path to YAML config file.")
     parser.add_argument(
         "--yaml_file",
+        dest="yaml_config_legacy",
         type=str,
-        default="/cluster/project/reddy/katja/NGS_pipeline/config/script4_variant_labeling.yaml",
-        help="Path to YAML config file.",
+        default=None,
+        help="Legacy alias of --yaml_config",
     )
     args = parser.parse_args()
 
-    cfg = parse_yaml(args.yaml_file)
+    yaml_path = (
+        args.yaml_config
+        or args.yaml_config_legacy
+        or "/cluster/project/reddy/katja/NGS_pipeline/config/script4_variant_labeling.yaml"
+    )
+    cfg = parse_yaml(yaml_path)
     run(cfg)
 
 

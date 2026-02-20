@@ -1,33 +1,29 @@
 import argparse
 import logging
-import os
 import re
+import shutil
 import subprocess
 import time
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
-from utils.config_utils import load_yaml_config
+from utils.config_utils import load_pipeline_config
+from utils.logging_utils import (
+    add_logger_file_handler,
+    remove_logger_handler,
+    setup_pipeline_logging,
+)
 from utils.sample_utils import load_sample_sheet
 
-# -----------------------------------------------------------------------------
-# Logging setup
-# -----------------------------------------------------------------------------
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    handlers=[logging.StreamHandler()],
-)
+SCRIPT_NAME = "script1_preprocessing"
 logger = logging.getLogger(__name__)
 
 
 # -----------------------------------------------------------------------------
 # Utilities: per-sample logfile
 # -----------------------------------------------------------------------------
-def add_sample_logfile(sample_label: str, log_dir: Path) -> logging.FileHandler:
+def add_sample_logfile(sample_label: str, log_dir: Path, run_label: Optional[str] = None) -> logging.FileHandler:
     """
     Add a per-sample logfile handler with a timestamped filename.
 
@@ -35,22 +31,13 @@ def add_sample_logfile(sample_label: str, log_dir: Path) -> logging.FileHandler:
     - We still log to console for the full run.
     - Additionally, each sample gets its own logfile for easier debugging.
     """
-    log_dir.mkdir(parents=True, exist_ok=True)
-
-    ts = datetime.now().strftime("%Y%m%d_%H-%M-%S")
-    log_path = log_dir / f"{sample_label}_{ts}.log"
-
-    handler = logging.FileHandler(log_path)
-    handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s %(levelname)s: %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
+    handler, log_path = add_logger_file_handler(
+        logger=logger,
+        logs_dir=log_dir,
+        script_name=SCRIPT_NAME,
+        scope=f"sample_{sample_label}",
+        run_label=run_label,
     )
-
-    # Important: if this script processes many samples, and you re-run the script,
-    # you want to ensure the handler doesn't get duplicated accidentally.
-    logger.addHandler(handler)
     logger.info("Per-sample logfile: %s", log_path)
 
     return handler
@@ -58,16 +45,26 @@ def add_sample_logfile(sample_label: str, log_dir: Path) -> logging.FileHandler:
 
 def remove_sample_logfile(handler: logging.FileHandler) -> None:
     """Detach and close a per-sample logfile handler."""
-    logger.removeHandler(handler)
-    handler.close()
+    remove_logger_handler(logger, handler)
 
 
 # -----------------------------------------------------------------------------
 # Config + I/O helpers
 # -----------------------------------------------------------------------------
 def parse_arguments_from_yaml(yaml_file: str) -> Dict[str, Any]:
-    """Load YAML config into a dict."""
-    return load_yaml_config(yaml_file)
+    """Load and validate YAML config into a dict."""
+    return load_pipeline_config(
+        yaml_file,
+        required_keys=("output_dir", "bbmap_dir"),
+        default_values={
+            "qtrim": "r",
+            "quality_threshold": 20,
+            "min_length": 190,
+            "bbduk_xmx_gb": 8,
+            "logs_dir": None,
+        },
+        path_keys=("output_dir", "bbmap_dir", "logs_dir"),
+    )
 
 
 def safe_name(s: str) -> str:
@@ -257,11 +254,11 @@ def combine_gz_fastqs(input_files: List[str], combined_out: str) -> Dict[str, st
         total_in += size
         logger.info("  [combine] %s (%d bytes)", fp, size)
 
-    # Stream copy (binary) to avoid any decoding issues
+    # Stream copy with fixed-size buffer to avoid loading all input files in memory.
     with open(combined_out_path, "wb") as out_handle:
         for fp in input_files:
             with open(fp, "rb") as in_handle:
-                out_handle.write(in_handle.read())
+                shutil.copyfileobj(in_handle, out_handle, length=1024 * 1024)
 
     out_size = combined_out_path.stat().st_size
     logger.info("  [combine] total_in=%d bytes, out=%d bytes", total_in, out_size)
@@ -304,18 +301,30 @@ def main() -> None:
         description="Trim single-end FASTQs and combine per sample_id."
     )
     parser.add_argument("--yaml_config", required=True)
-    parser.add_argument("--sample_sheet", required=True)
+    parser.add_argument("--sample_sheet", default=None)
     parser.add_argument("--sample_id", default=None)
     args = parser.parse_args()
 
     config = parse_arguments_from_yaml(args.yaml_config)
+    sample_sheet = args.sample_sheet or config.get("sample_sheet")
+    if not sample_sheet:
+        raise ValueError("Sample sheet must be provided via --sample_sheet or YAML key 'sample_sheet'.")
 
     output_dir = Path(config["output_dir"])
     bbmap_dir = str(config["bbmap_dir"])
 
-    logs_base = Path(config["logs_dir"])
-    logs_dir = logs_base / "Preprocessing"
-    logs_dir.mkdir(parents=True, exist_ok=True)
+    if not config.get("logs_dir"):
+        config["logs_dir"] = str(output_dir / "_logs")
+    logs_dir = Path(config["logs_dir"])
+    run_label = config.get("run_label")
+    run_log = setup_pipeline_logging(
+        logs_dir=logs_dir,
+        script_name=SCRIPT_NAME,
+        scope="run",
+        run_label=run_label,
+    )
+    logger.info("Logging to: %s", run_log)
+    logger.info("Loaded config: %s", config.get("_config_path", args.yaml_config))
 
     # Trimming parameters (with defaults)
     qtrim = config.get("qtrim", "r")
@@ -326,7 +335,7 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     df = load_sample_sheet(
-        args.sample_sheet,
+        sample_sheet,
         required_cols=("sample_id", "fastq", "sample_name"),
     )
 
@@ -355,7 +364,7 @@ def main() -> None:
         sample_label = f"{sample_id_str}_{sample_name}"
 
         logger.info("=== Processing sample: %s (%d FASTQs) ===", sample_label, len(group))
-        sample_log_handler = add_sample_logfile(sample_label, logs_dir)
+        sample_log_handler = add_sample_logfile(sample_label, logs_dir, run_label=run_label)
 
         try:
             sample_out_dir = output_dir / sample_label
@@ -439,7 +448,7 @@ def main() -> None:
 
     # Write one CSV for the whole run
     if run_summary_rows:
-        ts = datetime.now().strftime("%Y%m%d_%H-%M-%S")
+        ts = time.strftime("%Y%m%d_%H%M%S")
         run_summary_csv = output_dir / f"bbduk_summary_{ts}.csv"
         pd.DataFrame(run_summary_rows).to_csv(run_summary_csv, index=False)
         logger.info("Wrote RUN-level bbduk summary CSV: %s", run_summary_csv)

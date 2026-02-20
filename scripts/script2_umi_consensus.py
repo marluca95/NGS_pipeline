@@ -45,53 +45,33 @@ from typing import Dict, List, Tuple, Optional
 
 from Bio import SeqIO
 from fuzzysearch import find_near_matches
-from utils.config_utils import load_yaml_config, require_config_keys
+from utils.config_utils import load_pipeline_config
+from utils.logging_utils import setup_pipeline_logging
 from utils.sample_utils import load_sample_sheet
 
-
-# -------- logging --------
-def setup_logging(logs_dir: Path, log_name: str = "umi_pipeline.log") -> Path:
-    logs_dir.mkdir(parents=True, exist_ok=True)
-    log_file = logs_dir / log_name
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        handlers=[logging.FileHandler(log_file), logging.StreamHandler()],
-        force=True,
-    )
-    return log_file
-
-
+SCRIPT_NAME = "script2_umi_consensus"
 logger = logging.getLogger(__name__)
-
 
 # -------- config / IO helpers --------
 def parse_yaml(yaml_file: str) -> dict:
-    cfg = load_yaml_config(yaml_file)
-    require_config_keys(
-        cfg,
-        ["sample_sheet", "input_dir", "output_dir", "umi_length", "anchor_sequence"],
+    cfg = load_pipeline_config(
+        yaml_file,
+        required_keys=("sample_sheet", "input_dir", "output_dir", "umi_length", "anchor_sequence"),
+        default_values={
+            "logs_dir": None,
+            "combined_suffix": "_combined_trimmed.fastq.gz",
+            "max_mismatches": 1,
+            "min_reads_per_umi": 2,
+            "write_readcount_in_header": True,
+            "spacer_min": 0,
+            "spacer_max": 3,
+            "posterior_min_log_delta": 2.0,
+            "consensus_placeholder_qual_char": "I",
+        },
+        path_keys=("sample_sheet", "input_dir", "output_dir", "logs_dir"),
     )
-
-    cfg.setdefault("logs_dir", str(Path(cfg["output_dir"]) / "_logs"))
-
-    cfg.setdefault("combined_suffix", "_combined_trimmed.fastq.gz")
-    cfg.setdefault("max_mismatches", 1)
-    cfg.setdefault("min_reads_per_umi", 2)
-    cfg.setdefault("write_readcount_in_header", True)
-
-    # library layout
-    cfg.setdefault("spacer_min", 0)
-    cfg.setdefault("spacer_max", 3)
-
-    # posterior consensus params
-    cfg.setdefault("posterior_min_log_delta", 2.0)
-
-    # placeholder qualities for consensus FASTQ
-    # 'I' => Q40 (still interpretable, but constant); '!' => Q0 (strong "ignore" signal)
-    cfg.setdefault("consensus_placeholder_qual_char", "I")
-
+    if not cfg.get("logs_dir"):
+        cfg["logs_dir"] = str(Path(cfg["output_dir"]) / "_logs")
     return cfg
 
 
@@ -456,9 +436,14 @@ def main() -> None:
 
     cfg = parse_yaml(args.yaml_config)
 
-    logs_dir = Path(cfg["logs_dir"])
-    log_file = setup_logging(logs_dir)
-    logger.info(f"Logging to: {log_file}")
+    log_file = setup_pipeline_logging(
+        logs_dir=cfg["logs_dir"],
+        script_name=SCRIPT_NAME,
+        scope="run",
+        run_label=cfg.get("run_label"),
+    )
+    logger.info("Logging to: %s", log_file)
+    logger.info("Loaded config: %s", cfg.get("_config_path", args.yaml_config))
 
     df = load_sample_sheet(cfg["sample_sheet"], required_cols=("sample_id", "sample_name"))
 
