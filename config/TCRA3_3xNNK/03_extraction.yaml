@@ -1,0 +1,68 @@
+# =============================================================================
+# Step 03 — Library Filtering and Extraction (script3_library_filtering_and_extraction.py)
+# =============================================================================
+# Run with (per-sample):
+#   python scripts/script3_library_filtering_and_extraction.py \
+#          --yaml_config config/03_extraction.yaml \
+#          --sample_id <SAMPLE_ID>
+#
+# Full project settings are documented in pipeline_config.yaml.
+# =============================================================================
+
+# ---- Sample sheet -----------------------------------------------------------
+# Note: script3 uses 'samples_tsv' (not 'sample_sheet') as the key name.
+samples_tsv: "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3-3xNNK/P3408_LUCA-TCRA3-3xNNK_samples.tsv"
+
+# ---- Input / output ---------------------------------------------------------
+input_dir:   "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3-3xNNK/02_umi_consensus"
+output_dir:  "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3-3xNNK/03_extraction"
+logs_dir:    "/cluster/project/reddy/katja/NGS_pipeline/logs/P3408_LUCA-TCRA3-3xNNK/03_extraction"
+
+# ---- Run label (used in log file names) -------------------------------------
+run_label:   "P3408_LUCA-TCRA3-3xNNK"
+
+# ---- Anchor / region extraction ---------------------------------------------
+anchor_sequence:       "CCTGGTGCCCGGCCCGAA"
+anchor_max_mismatches: 0
+region_length_nt:      33    # must be divisible by 3 for clean AA translation
+
+# ---- Output control ---------------------------------------------------------
+drop_if_contains_N: true    # drop reads whose extracted region contains N
+write_fail_fastq:   false    # write rejected reads to a separate FAIL FASTQ
+write_aa_tsv:       true    # write amino-acid translation of passing reads
+
+# ---- Library validation mode ------------------------------------------------
+# "combinatorial" — validates each codon against a degenerate pattern list
+# "3xNNK"         — allows up to max_mutated_codons NNK mutations from WT
+library_mode: "3xNNK"
+
+# --- Combinatorial design codons (DESIGN orientation) ---
+degenerate_codons:
+  - "SCN"
+  - "RGY"
+  - "RGY"
+  - "VNB"
+  - "ARY"
+  - "VNB"
+  - "GYN"
+  - "RRY"
+  - "GRR"
+  - "CWR"
+  - "TWY"
+
+# --- 3xNNK mode (only used if library_mode: 3xNNK) ---
+WT_nt_33: "GCCAGCAGCCCGAATATGGCGGATGAACAGTAC"   # exact 33 nt WT template
+max_mutated_codons: 3
+
+# ---- Input file suffixes ----------------------------------------------------
+# Files are expected at input_dir/{sample_id}_{sample_name}{suffix}
+# Set to "" to skip that input type.
+input_suffixes_consensus:  "_consensus.fastq.gz"
+input_suffixes_singletons: "_singletons_rescued.fastq.gz"
+
+# ---- Output files produced by this step -------------------------------------
+# Per sample (in output_dir/):
+#   {sample_id}_{sample_name}.filtered.PASS.fastq.gz
+#   {sample_id}_{sample_name}.filtered.FAIL.fastq.gz   (if write_fail_fastq: true)
+#   {sample_id}_{sample_name}.filtered.PASS.aa.tsv
+#   {sample_id}_{sample_name}.filtered.summary.tsv

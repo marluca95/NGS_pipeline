@@ -1,0 +1,37 @@
+# =============================================================================
+# Step 02a — Singleton Rescue (Script2a_singleton_rescue.py)
+# =============================================================================
+# Run with:
+#   python scripts/Script2a_singleton_rescue.py --yaml_config config/02a_singleton_rescue.yaml
+#
+# Full project settings are documented in pipeline_config.yaml.
+# =============================================================================
+
+# ---- Sample sheet -----------------------------------------------------------
+# TSV with columns: sample_id, sample_name
+samples_tsv:    "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3-3xNNK/P3408_LUCA-TCRA3-3xNNK_samples.tsv"
+
+# ---- Input / output ---------------------------------------------------------
+# singleton_dir: folder containing *_singletons.fastq.gz from step 02
+singleton_dir:  "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3-3xNNK/02_umi_consensus"
+output_dir:     "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3-3xNNK/02_umi_consensus"
+logs_dir:       "/cluster/project/reddy/katja/NGS_pipeline/logs/P3408_LUCA-TCRA3-3xNNK/02a_singleton_rescue"
+
+# ---- Run label (used in log file names) -------------------------------------
+run_label:      "P3408_LUCA-TCRA3-3xNNK"
+
+# ---- Rescue parameters ------------------------------------------------------
+# Anchor sequence used to locate the start of the variable region inside the insert
+wt_anchor:        "CCTGGTGCCCGGCCCGAA"
+var_len:          33     # length of the variable region to extract (nt)
+min_umis:         3      # minimum distinct UMIs required to keep a variant
+
+# Suffix of singleton files produced by step 02
+singleton_suffix: "_singletons.fastq.gz"
+
+# ---- Output files produced by this step -------------------------------------
+# Per sample (in output_dir/):
+#   {sample_id}_{sample_name}_singletons_rescued.fastq.gz
+#   {sample_id}_{sample_name}_singleton_variants_{min_umis}umis.tsv
+# Run-level (in output_dir/):
+#   singleton_rescue_summary.tsv

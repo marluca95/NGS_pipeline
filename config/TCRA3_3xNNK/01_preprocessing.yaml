@@ -1,0 +1,36 @@
+# =============================================================================
+# Step 01 — Quality Trimming (script1_preprocessing.py)
+# =============================================================================
+# Run with:
+#   python scripts/script1_preprocessing.py --yaml_config config/01_preprocessing.yaml
+#
+# Full project settings are documented in pipeline_config.yaml.
+# =============================================================================
+
+# ---- External tool ----------------------------------------------------------
+bbmap_dir:    "/cluster/project/reddy/marluca/NGS_pipeline/bbmap"
+
+# ---- Sample sheet -----------------------------------------------------------
+# TSV with columns: sample_id, sample_name, lane, read, fastq
+sample_sheet: "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3-3xNNK/P3408_LUCA-TCRA3-3xNNK_samples.tsv"
+
+# ---- Output -----------------------------------------------------------------
+output_dir:   "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3-3xNNK/01_preprocessed"
+logs_dir:     "/cluster/project/reddy/katja/NGS_pipeline/logs/P3408_LUCA-TCRA3-3xNNK/01_preprocessing"
+
+# ---- Run label (used in log file names) -------------------------------------
+run_label:    "P3408_LUCA-TCRA3-3xNNK"
+
+# ---- BBDuk trimming parameters ----------------------------------------------
+qtrim:             "r"    # trim from the right end only
+quality_threshold: 20     # Phred quality cutoff
+min_length:        191    # discard reads shorter than this after trimming
+bbduk_xmx_gb:     64     # Java heap size in GB
+
+# ---- Output files produced by this step -------------------------------------
+# Per sample (in output_dir/{sample_id}_{sample_name}/):
+#   {sample_id}_{sample_name}.trimmed.fastq.gz          — per-lane trimmed FASTQ
+#   {sample_id}_{sample_name}_combined_trimmed.fastq.gz — all lanes merged
+#   {sample_id}_{sample_name}.bbduk_summary.csv         — BBDuk stats
+# Run-level (in output_dir/):
+#   bbduk_run_summary.csv
