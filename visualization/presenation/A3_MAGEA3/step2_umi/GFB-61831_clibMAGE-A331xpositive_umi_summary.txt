@@ -1,0 +1,98 @@
+Sample: GFB-61831_clibMAGE-A331xpositive
+Input FASTQ: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/processed/27_01_2026_minLenght191_QScore20/GFB-61831_clibMAGE-A331xpositive/GFB-61831_clibMAGE-A331xpositive_combined_trimmed.fastq.gz
+
+Total reads processed: 15209268
+Reads too short for spacer+UMI+anchor (dropped): 0
+Reads with no anchor found (dropped): 338551
+Reads with anchor at invalid position (dropped): 44443
+Reads with empty insert after anchor (dropped): 0
+
+Total UMIs detected: 4630164
+UMIs with >= 2 reads (consensus): 3255374
+UMIs with 1 read (singletons kept): 1374790
+UMIs with 0 reads: 0
+
+Reads contributing to consensus UMIs: 13451484
+Reads in singleton UMIs: 1374790
+
+Reads per UMI distribution:
+  1 reads: 1374790 UMIs
+  2 reads: 1000095 UMIs
+  3 reads: 733822 UMIs
+  4 reads: 504884 UMIs
+  5 reads: 339443 UMIs
+  6 reads: 224343 UMIs
+  7 reads: 148509 UMIs
+  8 reads: 97815 UMIs
+  9 reads: 64786 UMIs
+  10 reads: 43675 UMIs
+  11 reads: 29176 UMIs
+  12 reads: 19941 UMIs
+  13 reads: 13828 UMIs
+  14 reads: 9431 UMIs
+  15 reads: 6605 UMIs
+  16 reads: 4705 UMIs
+  17 reads: 3528 UMIs
+  18 reads: 2494 UMIs
+  19 reads: 1852 UMIs
+  20 reads: 1369 UMIs
+  21 reads: 1030 UMIs
+  22 reads: 791 UMIs
+  23 reads: 624 UMIs
+  24 reads: 451 UMIs
+  25 reads: 400 UMIs
+  26 reads: 290 UMIs
+  27 reads: 257 UMIs
+  28 reads: 187 UMIs
+  29 reads: 160 UMIs
+  30 reads: 119 UMIs
+  31 reads: 113 UMIs
+  32 reads: 91 UMIs
+  33 reads: 73 UMIs
+  34 reads: 74 UMIs
+  35 reads: 55 UMIs
+  36 reads: 51 UMIs
+  37 reads: 39 UMIs
+  38 reads: 26 UMIs
+  39 reads: 34 UMIs
+  40 reads: 24 UMIs
+  41 reads: 24 UMIs
+  42 reads: 18 UMIs
+  43 reads: 15 UMIs
+  44 reads: 12 UMIs
+  45 reads: 14 UMIs
+  46 reads: 9 UMIs
+  47 reads: 5 UMIs
+  48 reads: 6 UMIs
+  49 reads: 5 UMIs
+  50 reads: 8 UMIs
+  51 reads: 9 UMIs
+  52 reads: 5 UMIs
+  53 reads: 3 UMIs
+  54 reads: 4 UMIs
+  55 reads: 6 UMIs
+  56 reads: 3 UMIs
+  57 reads: 4 UMIs
+  58 reads: 2 UMIs
+  59 reads: 4 UMIs
+  61 reads: 2 UMIs
+  62 reads: 2 UMIs
+  63 reads: 1 UMIs
+  64 reads: 2 UMIs
+  65 reads: 1 UMIs
+  66 reads: 3 UMIs
+  67 reads: 3 UMIs
+  69 reads: 1 UMIs
+  71 reads: 1 UMIs
+  73 reads: 1 UMIs
+  74 reads: 3 UMIs
+  76 reads: 1 UMIs
+  79 reads: 1 UMIs
+  81 reads: 2 UMIs
+  90 reads: 1 UMIs
+  93 reads: 1 UMIs
+  105 reads: 1 UMIs
+  106 reads: 1 UMIs
+
+Consensus QC TSV: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/umi/30_01_2026_FULLRUN/GFB-61831_clibMAGE-A331xpositive_consensus_qc.tsv
+Consensus FASTQ placeholder qual char: 'I'

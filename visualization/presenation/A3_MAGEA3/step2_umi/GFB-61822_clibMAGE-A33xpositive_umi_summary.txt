@@ -1,0 +1,31 @@
+Sample: GFB-61822_clibMAGE-A33xpositive
+Input FASTQ: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/processed/27_01_2026_minLenght191_QScore20/GFB-61822_clibMAGE-A33xpositive/GFB-61822_clibMAGE-A33xpositive_combined_trimmed.fastq.gz
+
+Total reads processed: 1073075
+Reads too short for spacer+UMI+anchor (dropped): 0
+Reads with no anchor found (dropped): 31486
+Reads with anchor at invalid position (dropped): 3007
+Reads with empty insert after anchor (dropped): 0
+
+Total UMIs detected: 878896
+UMIs with >= 2 reads (consensus): 135249
+UMIs with 1 read (singletons kept): 743647
+UMIs with 0 reads: 0
+
+Reads contributing to consensus UMIs: 294935
+Reads in singleton UMIs: 743647
+
+Reads per UMI distribution:
+  1 reads: 743647 UMIs
+  2 reads: 114962 UMIs
+  3 reads: 16977 UMIs
+  4 reads: 2668 UMIs
+  5 reads: 500 UMIs
+  6 reads: 101 UMIs
+  7 reads: 30 UMIs
+  8 reads: 8 UMIs
+  9 reads: 2 UMIs
+  10 reads: 1 UMIs
+
+Consensus QC TSV: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/umi/30_01_2026_FULLRUN/GFB-61822_clibMAGE-A33xpositive_consensus_qc.tsv
+Consensus FASTQ placeholder qual char: 'I'
