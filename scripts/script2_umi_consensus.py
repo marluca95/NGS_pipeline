@@ -38,6 +38,7 @@ import argparse
 import gzip
 import logging
 import math
+import shutil
 import traceback
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -47,6 +48,7 @@ from Bio import SeqIO
 from fuzzysearch import find_near_matches
 from utils.config_utils import load_pipeline_config
 from utils.logging_utils import setup_pipeline_logging
+from utils.metrics_utils import write_sample_metrics
 from utils.sample_utils import load_sample_sheet
 
 SCRIPT_NAME = "script2_umi_consensus"
@@ -62,6 +64,7 @@ def parse_yaml(yaml_file: str) -> dict:
             "combined_suffix": "_combined_trimmed.fastq.gz",
             "max_mismatches": 1,
             "min_reads_per_umi": 2,
+            "umi_bucket_count": 64,
             "write_readcount_in_header": True,
             "spacer_min": 0,
             "spacer_max": 3,
@@ -259,6 +262,9 @@ def process_one_sample(sample_id: str, sample_name: str, cfg: dict) -> None:
     anchor_seq = str(cfg["anchor_sequence"])
     max_anchor_dist = int(cfg.get("max_mismatches", 1))
     min_reads_per_umi = int(cfg.get("min_reads_per_umi", 2))
+    umi_bucket_count = int(cfg.get("umi_bucket_count", 64))
+    if umi_bucket_count < 1:
+        raise ValueError("umi_bucket_count must be at least 1")
 
     spacer_min = int(cfg.get("spacer_min", 0))
     spacer_max = int(cfg.get("spacer_max", 3))
@@ -269,9 +275,6 @@ def process_one_sample(sample_id: str, sample_name: str, cfg: dict) -> None:
     if len(consensus_placeholder_char) != 1:
         raise ValueError("consensus_placeholder_qual_char must be a single ASCII character (e.g. 'I' or '!').")
 
-    # set variables and Dictionary
-    umi_groups: Dict[str, List[Tuple[str, List[int]]]] = defaultdict(list)
-
     total_reads = 0
     too_short = 0
     no_anchor = 0
@@ -281,151 +284,203 @@ def process_one_sample(sample_id: str, sample_name: str, cfg: dict) -> None:
     # min lenght of read to fin anchor
     min_prefix = spacer_max + umi_len + len(anchor_seq)
 
-    # Parse one fastQ file, record by record
+    bucket_temp_dir = output_sample_dir / f".{sample_label}_umi_buckets"
+    bucket_handles: Dict[int, object] = {}
+    shutil.rmtree(bucket_temp_dir, ignore_errors=True)
+
+    def _bucket_path(bucket_id: int) -> Path:
+        return bucket_temp_dir / f"bucket_{bucket_id:04d}.tsv.gz"
+
+    def _bucket_id_for_umi(umi: str) -> int:
+        return hash(umi) % umi_bucket_count
+
+    def _get_bucket_handle(bucket_id: int):
+        if bucket_id not in bucket_handles:
+            bucket_temp_dir.mkdir(parents=True, exist_ok=True)
+            bucket_handles[bucket_id] = gzip.open(_bucket_path(bucket_id), "wt")
+        return bucket_handles[bucket_id]
+
     try:
-        with gzip.open(input_fastq, "rt") as handle:
-            for record in SeqIO.parse(handle, "fastq"):
-                total_reads += 1
-                seq = str(record.seq)
+        # Parse one fastQ file, record by record
+        try:
+            with gzip.open(input_fastq, "rt") as handle:
+                for record in SeqIO.parse(handle, "fastq"):
+                    total_reads += 1
+                    seq = str(record.seq)
 
-                if len(seq) < min_prefix:
-                    too_short += 1
+                    if len(seq) < min_prefix:
+                        too_short += 1
+                        continue
+
+                    hit, has_any_anchor = find_anchor_start_valid(
+                        seq=seq,
+                        anchor=anchor_seq,
+                        umi_len=umi_len,
+                        max_dist=max_anchor_dist,
+                        spacer_min=spacer_min,
+                        spacer_max=spacer_max,
+                    )
+                    if hit is None:
+                        if has_any_anchor:
+                            anchor_wrong_pos += 1
+                        else:
+                            no_anchor += 1
+                        continue
+
+                    anchor_start, anchor_end = hit
+
+                    if anchor_start < umi_len:
+                        too_short += 1
+                        continue
+
+                    umi = seq[anchor_start - umi_len: anchor_start]
+
+                    insert = seq[anchor_end:]
+                    phred_full = record.letter_annotations.get("phred_quality", [])
+                    insert_q = phred_full[anchor_end:]
+
+                    if not insert:
+                        empty_insert += 1
+                        continue
+
+                    if len(insert_q) != len(insert):
+                        insert_q = insert_q[:len(insert)]
+
+                    bucket_id = _bucket_id_for_umi(umi)
+                    bucket_handle = _get_bucket_handle(bucket_id)
+                    bucket_handle.write(f"{umi}\t{insert}\t{bytes(insert_q).hex()}\n")
+
+        except Exception as e:
+            logger.error(f"ERROR reading FASTQ for sample {sample_label}: {e}")
+            logger.error(traceback.format_exc())
+            raise
+
+     
+        for handle in bucket_handles.values():
+            handle.close()
+        bucket_handles.clear()
+
+        # Write Outputs
+        hard_out = output_sample_dir / f"{sample_label}_consensus.fastq.gz"
+        singletons_out = output_sample_dir / f"{sample_label}_singletons.fastq.gz"
+        qc_out = output_sample_dir / f"{sample_label}_consensus_qc.tsv"
+
+        n_consensus_umis = 0
+        n_singleton_umis = 0
+        n_other_umis = 0
+        reads_in_consensus = 0
+        reads_in_singletons = 0
+        total_umis = 0
+        counts: List[int] = []
+
+        with gzip.open(hard_out, "wt") as hard_handle, gzip.open(singletons_out, "wt") as sing_handle, open(qc_out, "w") as qc_handle:
+            qc_handle.write("umi\tn_reads\tcons_len\tnN\tmin_log_delta\tmedian_log_delta\tp10_log_delta\n")
+
+            for bucket_id in range(umi_bucket_count):
+                bucket_path = _bucket_path(bucket_id)
+                if not bucket_path.exists():
                     continue
 
-                hit, has_any_anchor = find_anchor_start_valid(
-                    seq=seq,
-                    anchor=anchor_seq,
-                    umi_len=umi_len,
-                    max_dist=max_anchor_dist,
-                    spacer_min=spacer_min,
-                    spacer_max=spacer_max,
-                )
-                if hit is None:
-                    if has_any_anchor:
-                        anchor_wrong_pos += 1
+                umi_groups: Dict[str, List[Tuple[str, List[int]]]] = defaultdict(list)
+
+                with gzip.open(bucket_path, "rt") as bucket_handle:
+                    for line in bucket_handle:
+                        umi, insert, insert_q_hex = line.rstrip("\n").split("\t")
+                        umi_groups[umi].append((insert, list(bytes.fromhex(insert_q_hex))))
+
+                for umi, seq_qual_pairs in umi_groups.items():
+                    n = len(seq_qual_pairs)
+                    total_umis += 1
+                    counts.append(n)
+
+                    if n >= min_reads_per_umi:
+                        seqs = [s for s, _ in seq_qual_pairs]
+                        quals = [list(q) for _, q in seq_qual_pairs]  # convert bytes back to ints
+
+                        # UMI Consensus generation
+                        cons, qc = collapse_umis_posterior(
+                            seqs,
+                            quals,
+                            min_log_delta=posterior_min_log_delta,
+                        )
+
+                        header = f"{umi}|n={n}"
+
+                        hard_handle.write(
+                            f"@{header}\n{cons}\n+\n{placeholder_qual(len(cons), char=consensus_placeholder_char)}\n"
+                        )
+
+                        qc_handle.write(
+                            f"{umi}\t{n}\t{int(qc['len'])}\t{int(qc['nN'])}\t"
+                            f"{qc['min_log_delta']:.3f}\t{qc['median_log_delta']:.3f}\t{qc['p10_log_delta']:.3f}\n"
+                        )
+
+                        n_consensus_umis += 1
+                        reads_in_consensus += n
+
+                    elif n == 1:
+                        s, q = seq_qual_pairs[0]
+                        header = f"{umi}|n={n}"
+                        sing_handle.write(f"@{header}\n{s}\n+\n{phred_to_fastq_ascii(q)}\n")
+
+                        n_singleton_umis += 1
+                        reads_in_singletons += 1
+
                     else:
-                        no_anchor += 1
-                    continue
+                        n_other_umis += 1
 
-                anchor_start, anchor_end = hit
+        logger.info(f"Hard consensus written: {hard_out} (UMIs>={min_reads_per_umi}: {n_consensus_umis})")
+        logger.info(f"Singletons written: {singletons_out} (UMIs==1: {n_singleton_umis})")
+        logger.info(f"Consensus QC written: {qc_out}")
 
-                if anchor_start < umi_len:
-                    too_short += 1
-                    continue
+        # Summary
+        summary = output_sample_dir / f"{sample_label}_umi_summary.txt"
+        dist = Counter(counts)
 
-                umi = seq[anchor_start - umi_len: anchor_start]
+        with open(summary, "w") as s:
+            s.write(f"Sample: {sample_label}\n")
+            s.write(f"Input FASTQ: {input_fastq}\n")
+            s.write("\n")
+            s.write(f"Total reads processed: {total_reads}\n")
+            s.write(f"Reads too short for spacer+UMI+anchor (dropped): {too_short}\n")
+            s.write(f"Reads with no anchor found (dropped): {no_anchor}\n")
+            s.write(f"Reads with anchor at invalid position (dropped): {anchor_wrong_pos}\n")
+            s.write(f"Reads with empty insert after anchor (dropped): {empty_insert}\n")
+            s.write("\n")
+            s.write(f"Total UMIs detected: {total_umis}\n")
+            s.write(f"UMIs with >= {min_reads_per_umi} reads (consensus): {n_consensus_umis}\n")
+            s.write(f"UMIs with 1 read (singletons kept): {n_singleton_umis}\n")
+            s.write(f"UMIs with 0 reads: {n_other_umis}\n")
+            s.write("\n")
+            s.write(f"Reads contributing to consensus UMIs: {reads_in_consensus}\n")
+            s.write(f"Reads in singleton UMIs: {reads_in_singletons}\n")
+            s.write("\n")
+            s.write("Reads per UMI distribution:\n")
+            for c in sorted(dist.keys()):
+                s.write(f"  {c} reads: {dist[c]} UMIs\n")
+            s.write("\n")
+            s.write(f"Consensus QC TSV: {qc_out}\n")
+            s.write(f"Consensus FASTQ placeholder qual char: '{consensus_placeholder_char}'\n")
 
-                insert = seq[anchor_end:]
-                phred_full = record.letter_annotations.get("phred_quality", [])
-                insert_q = phred_full[anchor_end:]
+        logger.info(f"Summary written: {summary}")
+        logger.info(f"UMI processing complete for {sample_label}.")
 
-                if not insert:
-                    empty_insert += 1
-                    continue
-
-
-                if len(insert_q) != len(insert):
-                    insert_q = insert_q[:len(insert)]
-
-                umi_groups[umi].append((insert, bytes(insert_q)))
-
-
-    except Exception as e:
-        logger.error(f"ERROR reading FASTQ for sample {sample_label}: {e}")
-        logger.error(traceback.format_exc())
-        raise
-
-    # Write Outputs
-    hard_out = output_sample_dir / f"{sample_label}_consensus.fastq.gz"
-    singletons_out = output_sample_dir / f"{sample_label}_singletons.fastq.gz"
-    qc_out = output_sample_dir / f"{sample_label}_consensus_qc.tsv"
-
-    n_consensus_umis = 0
-    n_singleton_umis = 0
-    n_other_umis = 0
-    reads_in_consensus = 0
-    reads_in_singletons = 0
-
-    with gzip.open(hard_out, "wt") as hard_handle, gzip.open(singletons_out, "wt") as sing_handle, open(qc_out, "w") as qc_handle:
-        qc_handle.write("umi\tn_reads\tcons_len\tnN\tmin_log_delta\tmedian_log_delta\tp10_log_delta\n")
-
-        for umi, seq_qual_pairs in umi_groups.items():
-            n = len(seq_qual_pairs)
-
-            if n >= min_reads_per_umi:
-                seqs = [s for s, _ in seq_qual_pairs]
-                quals = [list(q) for _, q in seq_qual_pairs]  # convert bytes back to ints
-
-
-                # UMI Consensus generation
-                cons, qc = collapse_umis_posterior(
-                    seqs,
-                    quals,
-                    min_log_delta=posterior_min_log_delta,
-                )
-
-                header = f"{umi}|n={n}"
-
-                hard_handle.write(
-                    f"@{header}\n{cons}\n+\n{placeholder_qual(len(cons), char=consensus_placeholder_char)}\n"
-                )
-
-                qc_handle.write(
-                    f"{umi}\t{n}\t{int(qc['len'])}\t{int(qc['nN'])}\t"
-                    f"{qc['min_log_delta']:.3f}\t{qc['median_log_delta']:.3f}\t{qc['p10_log_delta']:.3f}\n"
-                )
-
-                n_consensus_umis += 1
-                reads_in_consensus += n
-
-            elif n == 1:
-                s, q = seq_qual_pairs[0]
-                header = f"{umi}|n={n}"
-                sing_handle.write(f"@{header}\n{s}\n+\n{phred_to_fastq_ascii(q)}\n")
-
-                n_singleton_umis += 1
-                reads_in_singletons += 1
-
-            else:
-                n_other_umis += 1
-
-    logger.info(f"Hard consensus written: {hard_out} (UMIs>={min_reads_per_umi}: {n_consensus_umis})")
-    logger.info(f"Singletons written: {singletons_out} (UMIs==1: {n_singleton_umis})")
-    logger.info(f"Consensus QC written: {qc_out}")
-
-    # Summary
-    summary = output_sample_dir / f"{sample_label}_umi_summary.txt"
-    counts = [len(v) for v in umi_groups.values()]
-    dist = Counter(counts)
-    total_umis = len(umi_groups)
-
-    with open(summary, "w") as s:
-        s.write(f"Sample: {sample_label}\n")
-        s.write(f"Input FASTQ: {input_fastq}\n")
-        s.write("\n")
-        s.write(f"Total reads processed: {total_reads}\n")
-        s.write(f"Reads too short for spacer+UMI+anchor (dropped): {too_short}\n")
-        s.write(f"Reads with no anchor found (dropped): {no_anchor}\n")
-        s.write(f"Reads with anchor at invalid position (dropped): {anchor_wrong_pos}\n")
-        s.write(f"Reads with empty insert after anchor (dropped): {empty_insert}\n")
-        s.write("\n")
-        s.write(f"Total UMIs detected: {total_umis}\n")
-        s.write(f"UMIs with >= {min_reads_per_umi} reads (consensus): {n_consensus_umis}\n")
-        s.write(f"UMIs with 1 read (singletons kept): {n_singleton_umis}\n")
-        s.write(f"UMIs with 0 reads: {n_other_umis}\n")
-        s.write("\n")
-        s.write(f"Reads contributing to consensus UMIs: {reads_in_consensus}\n")
-        s.write(f"Reads in singleton UMIs: {reads_in_singletons}\n")
-        s.write("\n")
-        s.write("Reads per UMI distribution:\n")
-        for c in sorted(dist.keys()):
-            s.write(f"  {c} reads: {dist[c]} UMIs\n")
-        s.write("\n")
-        s.write(f"Consensus QC TSV: {qc_out}\n")
-        s.write(f"Consensus FASTQ placeholder qual char: '{consensus_placeholder_char}'\n")
-
-    logger.info(f"Summary written: {summary}")
-    logger.info(f"UMI processing complete for {sample_label}.")
+        return {
+            "reads_in":                   total_reads,
+            "reads_lost_too_short":       too_short,
+            "reads_lost_no_anchor":       no_anchor,
+            "reads_lost_anchor_wrong_pos": anchor_wrong_pos,
+            "reads_lost_empty_insert":    empty_insert,
+            "reads_in_consensus":         reads_in_consensus,
+            "reads_in_singletons":        reads_in_singletons,
+            "umis_total":                 total_umis,
+            "umis_consensus":             n_consensus_umis,
+            "umis_singleton":             n_singleton_umis,
+        }
+    finally:
+        for handle in bucket_handles.values():
+            handle.close()
+        shutil.rmtree(bucket_temp_dir, ignore_errors=True)
 
 
 def main() -> None:
@@ -454,11 +509,21 @@ def main() -> None:
 
     grouped = df.groupby("sample_id", sort=False)
 
+    metrics_path = Path(cfg["output_dir"]) / "per_sample_metrics.tsv"
+
     for sample_id, g in grouped:
         names = g["sample_name"].dropna().unique()
         if len(names) != 1:
             raise ValueError(f"sample_id={sample_id} has multiple sample_name values: {names}")
-        process_one_sample(str(sample_id), str(names[0]), cfg)
+        sample_name = str(names[0])
+        stats = process_one_sample(str(sample_id), sample_name, cfg)
+        write_sample_metrics(
+            metrics_path=metrics_path,
+            sample_id=str(sample_id),
+            sample_name=sample_name,
+            step="02_umi_consensus",
+            metrics=stats,
+        )
 
 
 if __name__ == "__main__":

@@ -13,6 +13,7 @@ from Bio.Data import IUPACData
 from fuzzysearch import find_near_matches
 from utils.config_utils import load_pipeline_config
 from utils.logging_utils import setup_pipeline_logging
+from utils.metrics_utils import write_sample_metrics
 from utils.sample_utils import load_sample_sheet
 
 
@@ -473,6 +474,8 @@ def process_fastqs(
         logging.info(f"  AA TSV: {aa_path}")
     logging.info(f"  Summary: {summary_path}")
 
+    return counts
+
 
 def main():
     ap = argparse.ArgumentParser(
@@ -503,7 +506,12 @@ def main():
     strategy = build_strategy(cfg)
     out_dir = Path(cfg["output_dir"])
 
-    process_fastqs(
+    # prefix is "{sample_id}_{sample_name}" — split for metrics
+    _parts = prefix.split("_", 1)
+    _sample_id   = _parts[0]
+    _sample_name = _parts[1] if len(_parts) > 1 else prefix
+
+    counts = process_fastqs(
         input_paths=input_fastqs,
         out_dir=out_dir,
         prefix=prefix,
@@ -514,6 +522,25 @@ def main():
         write_fail=write_fail,
         write_aa_tsv=write_aa_tsv,
         strategy=strategy,
+    )
+
+    write_sample_metrics(
+        metrics_path=out_dir / "per_sample_metrics.tsv",
+        sample_id=_sample_id,
+        sample_name=_sample_name,
+        step="03_extraction",
+        metrics={
+            "reads_in_total":          counts.get("total_reads", 0),
+            "reads_pass":              counts.get("pass", 0),
+            "reads_lost_no_anchor":    counts.get("fail_anchor_not_found", 0),
+            "reads_lost_too_short":    counts.get("fail_region_too_short", 0),
+            "reads_lost_contains_N":   counts.get("fail_contains_N", 0),
+            "reads_lost_wrong_length": counts.get("fail_wrong_length", 0),
+            "reads_lost_stop_codon":   counts.get("fail_stop_codon", 0),
+            "reads_lost_validation":   counts.get("fail_degenerate_mismatch", 0)
+                                     + counts.get("fail_too_many_mutations", 0)
+                                     + counts.get("fail_mutation_not_NNK", 0),
+        },
     )
 
 

@@ -21,16 +21,18 @@ def parse_yaml(yaml_path: str) -> dict:
             "input_glob": "*.filtered.PASS.aa.tsv",
             "aa_column": "aa_seq",
             "pseudocount": 1e-9,
-            "logs_subdir": "_logs",  # backward-compatible
+            "logs_subdir": "_logs",  # backward-compatible fallback
             "lib_suffix": "originallib",
             "neg_suffix": "2xnegative",
             "pos3x_suffix": "3xpositive",
             "pos1x_suffix": "31xpositive",
             "required_conditions": ["neg", "pos3x", "pos1x"],
             "logs_dir": None,
-            # --- NEW: same rules as variant_analysis.ipynb ---
             "status_up": 2.0,     # Enriched if >= 2
             "status_down": 0.5,   # Depleted if <= 0.5
+            # Token prefix used to parse conditions from filenames.
+            # Leave empty ("") to match any text before the condition suffix.
+            "file_token_prefix": "",
         },
         path_keys=("input_dir", "output_dir", "logs_dir"),
     )
@@ -46,14 +48,14 @@ def parse_condition_token(
     pos3x_suffix: str,
     pos1x_suffix: str,
 ) -> Tuple[Optional[str], Optional[str]]:
-    if token == lib_suffix:
-        return "LIBRARY", "lib"
+    if token.endswith(lib_suffix):
+        return token[: -len(lib_suffix)].rstrip("-_") or "lib", "lib"
     if token.endswith(neg_suffix):
-        return token[: -len(neg_suffix)], "neg"
+        return token[: -len(neg_suffix)].rstrip("-_") or token, "neg"
     if token.endswith(pos3x_suffix):
-        return token[: -len(pos3x_suffix)], "pos3x"
+        return token[: -len(pos3x_suffix)].rstrip("-_") or token, "pos3x"
     if token.endswith(pos1x_suffix):
-        return token[: -len(pos1x_suffix)], "pos1x"
+        return token[: -len(pos1x_suffix)].rstrip("-_") or token, "pos1x"
     return None, None
 
 
@@ -67,14 +69,19 @@ def discover_input_files(cfg: dict) -> Tuple[Path, Dict[str, Dict[str, Path]], L
     unknown: List[Path] = []
     library_file: Optional[Path] = None
 
+    file_suffix = ".filtered.PASS.aa.tsv"
+
     for path in files:
-        m = re.search(r"_DMF5CDR3b(.+)\.filtered\.PASS\.aa\.tsv$", path.name)
-        # m = re.search(r"_clib(.+)\.filtered\.PASS\.aa\.tsv$", path.name)
-        if not m:
+        if not path.name.endswith(file_suffix):
             unknown.append(path)
             continue
 
-        token = m.group(1)
+        stem = path.name[: -len(file_suffix)]
+        if "_" not in stem:
+            unknown.append(path)
+            continue
+
+        _, token = stem.split("_", 1)
         peptide_key, condition = parse_condition_token(
             token=token,
             lib_suffix=cfg["lib_suffix"],
@@ -355,7 +362,7 @@ def run(cfg: dict) -> None:
         )
         logger.info("Wrote peptide table: %s (%d variants)", out_file, table.shape[0])
 
-    summary_path = output_dir / "script4_variant_labeling_summary.csv"
+    summary_path = output_dir / "variant_labeling_summary.csv"
     pd.DataFrame(summary_rows).to_csv(summary_path, index=False)
     logger.info("Wrote summary table: %s", summary_path)
     logger.info("Done. Processed=%d, Skipped=%d", processed, skipped)
@@ -375,11 +382,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    yaml_path = (
-        args.yaml_config
-        or args.yaml_config_legacy
-        or "/cluster/project/reddy/katja/NGS_pipeline/config/script4_variant_labeling.yaml"
-    )
+    yaml_path = args.yaml_config or args.yaml_config_legacy
+    if not yaml_path:
+        raise ValueError("A config file must be supplied via --yaml_config.")
     cfg = parse_yaml(yaml_path)
     run(cfg)
 

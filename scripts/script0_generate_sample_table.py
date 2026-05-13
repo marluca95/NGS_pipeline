@@ -1,11 +1,15 @@
+import argparse
+import logging
 import os
 import re
-import pandas as pd
+from pathlib import Path
 from typing import List, Dict
-import logging
 
-# Setup logging
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+import pandas as pd
+from utils.logging_utils import setup_pipeline_logging
+
+SCRIPT_NAME = "script0_generate_sample_table"
+logger = logging.getLogger(__name__)
 
 
 def collect_fastq_metadata(root: str) -> pd.DataFrame:
@@ -50,17 +54,17 @@ def collect_fastq_metadata(root: str) -> pd.DataFrame:
                     unmatched_files.append(os.path.join(dirpath, f))
 
     except OSError as e:
-        logging.error(f"Error accessing files: {e}")
+        logger.error(f"Error accessing files: {e}")
         raise
 
     if unmatched_files:
-        logging.warning(
+        logger.warning(
             f"{len(unmatched_files)} files did not match the expected pattern. Examples:\n"
             + "\n".join(unmatched_files[:5])
         )
 
     if not rows:
-        logging.error("No matching FASTQ files found. Please check your directory or filename pattern.")
+        logger.error("No matching FASTQ files found. Please check your directory or filename pattern.")
         raise ValueError("No matching FASTQ files found.")
 
     df = pd.DataFrame(rows)
@@ -72,9 +76,43 @@ def collect_fastq_metadata(root: str) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    root_dir: str = "/cluster/project/reddy/katja/data/raw/P3481_LUCA-TCRDMF5"
-    df_samples: pd.DataFrame = collect_fastq_metadata(root_dir)
-    df_samples.to_csv("P3481_LUCA-TCRDMF5_samples.tsv", sep="\t", index=False)
+    parser = argparse.ArgumentParser(
+        description="Traverse a raw FASTQ directory and generate a sample sheet TSV."
+    )
+    parser.add_argument(
+        "--root_dir",
+        required=True,
+        help="Root directory containing raw FASTQ files.",
+    )
+    parser.add_argument(
+        "--output",
+        required=True,
+        help="Path for the output sample sheet TSV (e.g. scripts/P3408_samples.tsv).",
+    )
+    parser.add_argument(
+        "--logs_dir",
+        default=None,
+        help="Directory for log files. Defaults to NGS_pipeline/logs/script0/.",
+    )
+    args = parser.parse_args()
 
-    logging.info("Metadata extraction complete. First few rows:")
-    print(df_samples.head())
+    output_path = Path(args.output)
+    logs_dir = (
+        Path(args.logs_dir)
+        if args.logs_dir
+        else Path(__file__).parent.parent / "logs" / SCRIPT_NAME
+    )
+
+    setup_pipeline_logging(logs_dir=logs_dir, script_name=SCRIPT_NAME, scope="run")
+
+    logger.info("Root directory : %s", args.root_dir)
+    logger.info("Output file    : %s", output_path)
+    logger.info("Logs directory : %s", logs_dir)
+
+    df_samples: pd.DataFrame = collect_fastq_metadata(args.root_dir)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    df_samples.to_csv(output_path, sep="\t", index=False)
+
+    logger.info("Wrote %d rows to %s", len(df_samples), output_path)
+    logger.info("First few rows:\n%s", df_samples.head().to_string())

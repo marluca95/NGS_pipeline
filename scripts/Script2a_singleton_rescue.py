@@ -10,6 +10,7 @@ import pandas as pd
 from Bio import SeqIO
 from utils.config_utils import load_pipeline_config
 from utils.logging_utils import setup_pipeline_logging
+from utils.metrics_utils import write_sample_metrics
 from utils.sample_utils import load_sample_sheet
 
 SCRIPT_NAME = "script2a_singleton_rescue"
@@ -211,6 +212,21 @@ def main():
             stats = rescue_one_sample(in_fq, out_fq, out_tsv, wt_anchor, var_len, min_umis)
             logger.info(f"Done {sample_label}: {stats}")
             all_stats.append({"sample_id": sample_id, "sample_name": sample_name, **stats})
+            write_sample_metrics(
+                metrics_path=out_dir / "per_sample_metrics.tsv",
+                sample_id=sample_id,
+                sample_name=sample_name,
+                step="02a_singleton_rescue",
+                metrics={
+                    "reads_in":              stats["total_singleton_reads"],
+                    "reads_lost_no_anchor":  stats["no_anchor_reads"],
+                    "reads_lost_too_short":  stats["too_short_after_anchor_reads"],
+                    "reads_extracted":       stats["extracted_reads"],
+                    "variants_total":        stats["n_variants_total"],
+                    "variants_kept":         stats["n_variants_kept_ge_min_umis"],
+                    "reads_rescued":         stats["kept_reads"],
+                },
+            )
         except Exception as e:
             logger.error(f"ERROR processing {sample_label}: {e}")
             logger.error(traceback.format_exc())

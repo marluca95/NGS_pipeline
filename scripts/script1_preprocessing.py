@@ -14,6 +14,7 @@ from utils.logging_utils import (
     remove_logger_handler,
     setup_pipeline_logging,
 )
+from utils.metrics_utils import write_sample_metrics
 from utils.sample_utils import load_sample_sheet
 
 SCRIPT_NAME = "script1_preprocessing"
@@ -439,6 +440,22 @@ def main() -> None:
             )
             combine_gz_fastqs(trimmed_files, str(combined_out))
 
+            # Write standardised per-sample metrics (read-loss funnel)
+            _reads_in  = sum(int(r.get("reads_in",  0) or 0) for r in per_fastq_rows)
+            _reads_out = sum(int(r.get("reads_out", 0) or 0) for r in per_fastq_rows)
+            write_sample_metrics(
+                metrics_path=output_dir / "per_sample_metrics.tsv",
+                sample_id=sample_id_str,
+                sample_name=sample_name,
+                step="01_preprocessing",
+                metrics={
+                    "reads_in_total":       _reads_in,
+                    "reads_out_total":      _reads_out,
+                    "reads_lost_trimming":  _reads_in - _reads_out,
+                    "n_input_fastqs":       len(per_fastq_rows),
+                },
+            )
+
             logger.info("Done sample_id=%s", sample_id_str)
             logger.info("Trimmed files in: %s", sample_out_dir)
             logger.info("Combined output : %s", combined_out)
@@ -446,10 +463,10 @@ def main() -> None:
         finally:
             remove_sample_logfile(sample_log_handler)
 
-    # Write one CSV for the whole run
+    # Write one CSV for the whole run (use run_label instead of a timestamp in the name)
     if run_summary_rows:
-        ts = time.strftime("%Y%m%d_%H%M%S")
-        run_summary_csv = output_dir / f"bbduk_summary_{ts}.csv"
+        label = run_label or time.strftime("%Y%m%d_%H%M%S")
+        run_summary_csv = output_dir / f"bbduk_run_summary_{label}.csv"
         pd.DataFrame(run_summary_rows).to_csv(run_summary_csv, index=False)
         logger.info("Wrote RUN-level bbduk summary CSV: %s", run_summary_csv)
     else:
