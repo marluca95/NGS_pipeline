@@ -35,7 +35,7 @@ echo "Step:  02a_singleton_rescue"
 echo "Config: ${YAML}"
 echo "============================================="
 
-python -u scripts/Script2a_singleton_rescue.py \
+python -u scripts/script2a_singleton_rescue.py \
     --yaml_config "${YAML}"
 
 echo "============================================="
