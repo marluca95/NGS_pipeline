@@ -290,7 +290,5 @@ Output:
 - `sample_utils.py`: sample-sheet loading and column checks.
 
 ## Important Notes
-
-- `Script2a_singleton_rescue.py` has an uppercase `S` in filename; run scripts reference this exact name.
 - `script5_create_tcr_peptide_specificity_csv.py` currently uses hardcoded absolute paths. If you want it reusable across projects, parameterize these via CLI arguments or YAML.
 - Several datasets/config directories exist (`TCRA3_KH157`, `TCRA3_3xNNK`, `DMF5_3xNNK`, etc.). Use matching YAML files for your project when launching run steps.
