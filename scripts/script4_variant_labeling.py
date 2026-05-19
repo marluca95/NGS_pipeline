@@ -32,7 +32,7 @@ def parse_yaml(yaml_path: str) -> dict:
             "status_down": 0.5,   # Depleted if <= 0.5
             # Token prefix used to parse conditions from filenames.
             # Leave empty ("") to match any text before the condition suffix.
-            "file_token_prefix": "",
+            "file_token_prefix": "clib",
         },
         path_keys=("input_dir", "output_dir", "logs_dir"),
     )
@@ -47,7 +47,12 @@ def parse_condition_token(
     neg_suffix: str,
     pos3x_suffix: str,
     pos1x_suffix: str,
+    file_token_prefix: str = "",
 ) -> Tuple[Optional[str], Optional[str]]:
+    # Strip known prefix if provided (e.g., "clib")
+    if file_token_prefix and token.startswith(file_token_prefix):
+        token = token[len(file_token_prefix):].lstrip("-_")
+    
     if token.endswith(lib_suffix):
         return token[: -len(lib_suffix)].rstrip("-_") or "lib", "lib"
     if token.endswith(neg_suffix):
@@ -88,6 +93,7 @@ def discover_input_files(cfg: dict) -> Tuple[Path, Dict[str, Dict[str, Path]], L
             neg_suffix=cfg["neg_suffix"],
             pos3x_suffix=cfg["pos3x_suffix"],
             pos1x_suffix=cfg["pos1x_suffix"],
+            file_token_prefix=cfg["file_token_prefix"],
         )
 
         if peptide_key is None or condition is None:
@@ -223,53 +229,6 @@ def add_status_and_specificity(merged: pd.DataFrame, cfg: dict) -> None:
     merged["neg_vs_lib_status"] = merged["deplete_neg_lib"].apply(lambda v: flag(float(v), up, down))
     merged["specificity"] = merged.apply(annotate_row, axis=1)
 
-# def add_status_and_specificity(merged: pd.DataFrame, cfg: dict) -> None:
-#     """
-#     Adds:
-#       - deplete_neg_lib (same naming style as your old specificity CSV)
-#       - pos_vs_neg_status, pos_vs_lib_status, neg_vs_lib_status
-#       - specificity (0/1/2) using the same logic as variant_analysis.ipynb
-
-#     Because you have *two* positive conditions (pos3x and pos1x), we:
-#       - compute statuses for each (pos3x vs neg, pos1x vs neg, pos3x vs lib, pos1x vs lib)
-#       - then combine them into one pos_vs_neg_status / pos_vs_lib_status
-#         using combine_status() (Enriched if either enriched; Depleted if both depleted; else NoChange).
-#     """
-#     up = float(cfg.get("status_up", 2.0))
-#     down = float(cfg.get("status_down", 0.5))
-
-#     # Ensure needed enrichment columns exist
-#     needed = [
-#         "enrich_pos3x_vs_neg",
-#         "enrich_pos1x_vs_neg",
-#         "enrich_pos3x_vs_lib",
-#         "enrich_pos1x_vs_lib",
-#         "deplete_neg_lib",
-#     ]
-#     missing = [c for c in needed if c not in merged.columns]
-#     if missing:
-#         raise ValueError(f"Missing required enrichment columns for labeling: {missing}")
-
-#     # Per-condition statuses
-#     merged["pos3x_vs_neg_status"] = merged["enrich_pos3x_vs_neg"].apply(lambda v: flag(float(v), up, down))
-#     merged["pos1x_vs_neg_status"] = merged["enrich_pos1x_vs_neg"].apply(lambda v: flag(float(v), up, down))
-#     merged["pos3x_vs_lib_status"] = merged["enrich_pos3x_vs_lib"].apply(lambda v: flag(float(v), up, down))
-#     merged["pos1x_vs_lib_status"] = merged["enrich_pos1x_vs_lib"].apply(lambda v: flag(float(v), up, down))
-
-#     # Combined "pos" statuses (because you have two pos conditions)
-#     merged["pos_vs_neg_status"] = [
-#         combine_status(a, b) for a, b in zip(merged["pos3x_vs_neg_status"], merged["pos1x_vs_neg_status"])
-#     ]
-#     merged["pos_vs_lib_status"] = [
-#         combine_status(a, b) for a, b in zip(merged["pos3x_vs_lib_status"], merged["pos1x_vs_lib_status"])
-#     ]
-
-#     # neg_vs_lib_status uses deplete_neg_lib (neg vs lib fold-change)
-#     merged["neg_vs_lib_status"] = merged["deplete_neg_lib"].apply(lambda v: flag(float(v), up, down))
-
-#     # Specificity assignment (0/1/2)
-#     merged["specificity"] = merged.apply(annotate_row, axis=1)
-
 
 def build_variant_table_for_peptide(peptide_key: str, files: Dict[str, Path], cfg: dict) -> pd.DataFrame:
     aa_column = cfg["aa_column"]
@@ -289,13 +248,11 @@ def build_variant_table_for_peptide(peptide_key: str, files: Dict[str, Path], cf
     add_enrichment_columns(merged, pseudocount, numerator="pos1x", denominator="neg")
     add_enrichment_columns(merged, pseudocount, numerator="pos3x", denominator="lib")
     add_enrichment_columns(merged, pseudocount, numerator="pos1x", denominator="lib")
-
-    # NEW: neg vs lib enrichment (named deplete_neg_lib to match your earlier CSV naming)
     add_enrichment_columns(merged, pseudocount, numerator="neg", denominator="lib")
     if "enrich_neg_vs_lib" in merged.columns:
         merged.rename(columns={"enrich_neg_vs_lib": "deplete_neg_lib"}, inplace=True)
 
-    # NEW: statuses + specificity (0/1/2) using notebook rules
+    # add statuses + specificity (0/1/2)
     add_status_and_specificity(merged, cfg)
 
     return merged
@@ -369,22 +326,18 @@ def run(cfg: dict) -> None:
 
 
 def main() -> None:
+
+    # Parse yaml file and get all inputs
     parser = argparse.ArgumentParser(
         description="Generate per-peptide variant labeling CSVs (with specificity 0/1/2) from extracted PASS AA tables."
     )
     parser.add_argument("--yaml_config", type=str, default=None, help="Path to YAML config file.")
-    parser.add_argument(
-        "--yaml_file",
-        dest="yaml_config_legacy",
-        type=str,
-        default=None,
-        help="Legacy alias of --yaml_config",
-    )
     args = parser.parse_args()
 
-    yaml_path = args.yaml_config or args.yaml_config_legacy
+    yaml_path = args.yaml_config
     if not yaml_path:
         raise ValueError("A config file must be supplied via --yaml_config.")
+    
     cfg = parse_yaml(yaml_path)
     run(cfg)
 
