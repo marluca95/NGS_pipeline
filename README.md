@@ -63,232 +63,43 @@ From `NGS_pipeline/` on the cluster:
 5. `sbatch --array=... run/03_run_extraction.sbatch`
 6. `sbatch run/04_run_variant_labeling.sbatch`
 
-## Scripts: Inputs and Outputs
+## Scripts: quick reference
 
-All scripts below are in `scripts/`.
+All scripts live in `scripts/`. Below is a compact summary — purpose, essential inputs, and main outputs. Configuration is provided via per-step YAML files in `config/` (see `run/` for example sbatch launchers).
 
-### `script0_generate_sample_table.py`
+- `script0_generate_sample_table.py` — Build a sample sheet from raw FASTQ files.
+	- Input: raw `.fastq.gz` directory tree.
+	- Output: tabular sample sheet TSV (sample_id, sample_name, fastq, ...).
 
-Purpose:
-- Traverses a raw FASTQ directory tree and builds a sample sheet TSV.
+- `script1_preprocessing.py` — Trim reads (BBDuk) and combine lanes per sample.
+	- Input: sample sheet + FASTQ files.
+	- Output: per-sample trimmed FASTQs and a combined `{sample}_combined_trimmed.fastq.gz` plus per-fastq summary CSV.
 
-CLI:
-- `--root_dir` (required): root containing `.fastq.gz` files.
-- `--output` (required): output sample table TSV.
-- `--logs_dir` (optional): log directory.
+- `script2_umi_consensus.py` — Call UMI consensus reads and keep singletons.
+	- Input: `{sample}_combined_trimmed.fastq.gz` files.
+	- Output: `{sample}_consensus.fastq.gz`, `{sample}_singletons.fastq.gz`, QC TSV and per-sample summary.
 
-Input:
-- FASTQ files matching naming pattern like
-	`{sample_id}_{...}_{sample_name}_S{...}_L{lane}_R{read}_{...}.fastq.gz`
+- `Script2a_singleton_rescue.py` — (Optional) filter/retain singleton-derived variants meeting a UMI-count threshold.
+	- Input: singleton FASTQs from step 02.
+	- Output: rescued singleton FASTQs and per-sample variant TSVs, plus a run summary.
 
-Output:
-- Sample sheet TSV with columns:
-	`sample_id, sample_name, run_depth, lane, read, fastq`
-- Run log file in the configured logs directory.
+- `script3_library_filtering_and_extraction.py` — Extract variable region, validate library rules, write PASS/FAIL and AA TSV.
+	- Input: consensus and/or rescued-singleton FASTQs.
+	- Output: `.filtered.PASS.fastq.gz`, optional `.filtered.FAIL.fastq.gz`, `.PASS.aa.tsv`, and a summary TSV per sample.
 
-### `script0_generate_sample_table_P3569.py`
+- `script4_variant_labeling.py` (and `script4_variant_labeling_dmf5_2x.py`) — Count variants per condition, compute enrichment, assign specificity labels (0/1/2), and write per-peptide CSVs plus a run summary.
+	- Input: `*.filtered.PASS.aa.tsv` files from step 03.
+	- Output: `{peptide}.variant_labeling.csv` and `variant_labeling_summary.csv`.
 
-Purpose:
-- Variant of step 00 for `P3569_LUCA-TCRA3_KH157`.
-
-CLI:
-- `--root_dir` (optional, has default path)
-- `--output` (optional, has default path)
-
-Input:
-- FASTQ files under the provided root directory.
-
-Output:
-- Sample sheet TSV with the same columns as step 00.
-
-### `script1_preprocessing.py`
-
-Purpose:
-- Quality-trims reads with BBDuk and combines trimmed FASTQs per sample.
-
-CLI:
-- `--yaml_config` (required): preprocessing YAML.
-- `--sample_sheet` (optional): overrides YAML `sample_sheet`.
-- `--sample_id` (optional): run one sample only.
-
-Key YAML inputs:
-- `sample_sheet`: TSV from step 00.
-- `output_dir`: step 01 output directory.
-- `bbmap_dir`: BBMap installation containing `bbduk.sh`.
-- optional trimming params (`qtrim`, `quality_threshold`, `min_length`, `bbduk_xmx_gb`).
-
-Input:
-- Per-row FASTQ paths from sample sheet (`fastq` column).
-
-Output per sample (`{output_dir}/{sample_id}_{sample_name}/`):
-- `*.trimmed.fastq.gz` (trimmed lane files)
-- `{sample_label}_combined_trimmed.fastq.gz`
-- `{sample_label}.bbduk_summary.csv` (per-input FASTQ metrics)
-
-Run-level output:
-- `{output_dir}/bbduk_run_summary_{run_label_or_timestamp}.csv`
-- `{output_dir}/per_sample_metrics.tsv`
-- Logs in configured `logs_dir`.
-
-### `script2_umi_consensus.py`
-
-Purpose:
-- Splits reads by UMI around anchor sequence, builds posterior/quality-aware consensus for multi-read UMIs, keeps singleton UMIs.
-
-CLI:
-- `--yaml_config` (required)
-- `--sample_id` (optional): process one sample.
-
-Key YAML inputs:
-- `sample_sheet`
-- `input_dir` (expects step 01 sample folders with `*_combined_trimmed.fastq.gz`)
-- `output_dir`
-- `umi_length`, `anchor_sequence`, `max_mismatches`, `spacer_min`, `spacer_max`
-- `min_reads_per_umi`, `posterior_min_log_delta`
-- `combined_suffix` (default `_combined_trimmed.fastq.gz`)
-
-Output per sample (`output_dir`):
-- `{sample_label}_consensus.fastq.gz`
-- `{sample_label}_singletons.fastq.gz`
-- `{sample_label}_consensus_qc.tsv`
-- `{sample_label}_umi_summary.txt`
-
-Run-level output:
-- `{output_dir}/per_sample_metrics.tsv`
-- Logs in configured `logs_dir`.
-
-### `Script2a_singleton_rescue.py`
-
-Purpose:
-- From singleton inserts, extracts a variable region after a WT anchor and keeps variants observed in at least `min_umis` distinct UMIs.
-
-CLI:
-- `--yaml_config` (required)
-- `--sample_id` (optional)
-
-Key YAML inputs:
-- `samples_tsv`
-- `singleton_dir` (usually step 02 output dir)
-- `output_dir`
-- `wt_anchor`, `var_len`, `min_umis`
-- `singleton_suffix` (default `_singletons.fastq.gz`)
-
-Input:
-- `{singleton_dir}/{sample_label}{singleton_suffix}`
-
-Output per sample:
-- `{output_dir}/{sample_label}_singletons_rescued.fastq.gz`
-- `{output_dir}/{sample_label}_singleton_variants_{min_umis}umis.tsv`
-
-Run-level output:
-- `{output_dir}/singleton_rescue_summary.tsv`
-- `{output_dir}/per_sample_metrics.tsv`
-- Logs in configured `logs_dir`.
-
-### `script3_library_filtering_and_extraction.py`
-
-Purpose:
-- Extracts the variable region after anchor, reverse-complements into design orientation, validates against library rules, writes PASS/FAIL FASTQ, and AA translation table.
-
-CLI:
-- `--yaml_config` (required)
-- `--sample_id` (required): one sample per run/task.
-
-Key YAML inputs:
-- `samples_tsv`
-- `input_dir`
-- `input_suffixes_consensus`
-- `input_suffixes_singletons`
-- `output_dir`
-- `anchor_sequence`, `anchor_max_mismatches`, `region_length_nt`
-- `drop_if_contains_N`, `write_fail_fastq`, `write_aa_tsv`
-- `library_mode` = `combinatorial` or `3xNNK`
-- mode-specific settings:
-	- combinatorial: `degenerate_codons` (11 codons)
-	- 3xNNK: `WT_nt_33`, `max_mutated_codons`
-
-Input:
-- For each sample label, one or both:
-	- `{input_dir}/{sample_label}{input_suffixes_consensus}`
-	- `{input_dir}/{sample_label}{input_suffixes_singletons}`
-
-Output per sample:
-- `{output_dir}/{sample_label}.filtered.PASS.fastq.gz`
-- `{output_dir}/{sample_label}.filtered.FAIL.fastq.gz` (if enabled)
-- `{output_dir}/{sample_label}.filtered.PASS.aa.tsv`
-- `{output_dir}/{sample_label}.filtered.summary.tsv`
-
-Run-level output:
-- `{output_dir}/per_sample_metrics.tsv`
-- Logs in configured `logs_dir`.
-
-### `script4_variant_labeling.py`
-
-Purpose:
-- Builds per-peptide enrichment tables and assigns specificity labels (`0/1/2`) using library, negative, and positive selections (`pos3x`, optional `pos1x`).
-
-CLI:
-- `--yaml_config` (required)
-
-Key YAML inputs:
-- `input_dir`, `output_dir`
-- `input_glob` (default `*.filtered.PASS.aa.tsv`)
-- `aa_column` (default `aa_seq`)
-- file parsing suffixes: `lib_suffix`, `neg_suffix`, `pos3x_suffix`, `pos1x_suffix`, optional `file_token_prefix`
-- thresholds: `pseudocount`, `status_up`, `status_down`
-- `required_conditions`
-
-Input:
-- Step 03 AA TSV files grouped by peptide and condition.
-
-Output:
-- Per peptide: `{peptide_key}.variant_labeling.csv`
-- Run summary: `variant_labeling_summary.csv`
-- Logs in configured `logs_dir`.
-
-### `script4_variant_labeling_dmf5_2x.py`
-
-Purpose:
-- Alternative variant-labeling workflow for datasets with one positive condition (`pos`) and one negative condition (`neg`) plus library.
-
-CLI:
-- `--yaml_config` (or legacy `--yaml_file`)
-
-Input:
-- Same type as step 04, but suffix schema is `lib/neg/pos` (2x design).
-
-Output:
-- Per peptide: `{peptide_key}.variant_labeling.csv`
-- Run summary: `variant_labeling_summary.csv`
-- Logs in configured `logs_dir`.
-
-### `script5_create_tcr_peptide_specificity_csv.py`
-
-Purpose:
-- Combines variant-labeling CSV files and peptide-name mapping into a final ML-ready CSV.
-
-CLI:
-- No CLI arguments (uses hardcoded paths in the script).
-
-Input:
-- All `*.csv` from `DATA_DIR` (variant-labeling outputs).
-- `MAPPING_PATH` containing peptide name to peptide sequence mapping.
-
-Output:
-- `OUTPUT_PATH` CSV with columns:
-	- `tcr` (from `aa_seq`)
-	- `peptide` (mapped peptide sequence)
-	- `label` (from specificity; only 0/1 kept)
+- `script5_create_tcr_peptide_specificity_csv.py` — Combine labeled CSVs with a peptide mapping to produce a final ML-ready CSV.
+	- Input: labeled CSVs and a peptide mapping file.
+	- Output: consolidated TCR–peptide–label CSV.
 
 ## Script Utility Modules
 
-`scripts/utils/` contains shared helpers used by pipeline scripts:
-
-- `config_utils.py`: YAML loading and validation.
-- `logging_utils.py`: consistent run/sample log setup.
-- `metrics_utils.py`: appending standardized per-sample metrics TSVs.
-- `sample_utils.py`: sample-sheet loading and column checks.
+`scripts/utils/` contains shared helpers used by the pipeline (config, logging, sample-sheet helpers, and metrics writing).
 
 ## Important Notes
-- `script5_create_tcr_peptide_specificity_csv.py` currently uses hardcoded absolute paths. If you want it reusable across projects, parameterize these via CLI arguments or YAML.
-- Several datasets/config directories exist (`TCRA3_KH157`, `TCRA3_3xNNK`, `DMF5_3xNNK`, etc.). Use matching YAML files for your project when launching run steps.
+
+- Use the per-step YAML configs in `config/` (examples in `config/TCRA3_KH157/`) when running the `run/*.sbatch` launchers.
+- `script5_create_tcr_peptide_specificity_csv.py` currently uses fixed paths inside the script; you may want to parameterize it for reuse.
