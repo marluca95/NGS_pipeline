@@ -1,8 +1,8 @@
 # Paths where trimmed + combined FASTQs live (input for UMI/consensus steps)
-input_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/P3569_LUCA-TCRA3_KH157/preprocessed/26_04_2026_minLenght110_QScore20"
+input_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/P3569_LUCA-TCRA3_KH157/01_preprocessed/11_05_2026_minLenght191_QScore30"
 sample_sheet: "/cluster/project/reddy/katja/NGS_pipeline/data/P3569_LUCA-TCRA3_KH157/P3569_LUCA-TCRA3_KH157_samples.tsv"
-output_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/P3569_LUCA-TCRA3_KH157/umi/27_04_2026_KH157"
-logs_dir: "/cluster/project/reddy/katja/NGS_pipeline/logs/P3569_LUCA-TCRA3_KH157/27_04_2026_KH157"
+output_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/P3569_LUCA-TCRA3_KH157/02_umi/11_05_2026_KH157"
+logs_dir: "/cluster/project/reddy/katja/NGS_pipeline/logs/P3569_LUCA-TCRA3_KH157/11_05_2026_KH157"
 
 # UMI extraction / matching
 umi_length: 12
