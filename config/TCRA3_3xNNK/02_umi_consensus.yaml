@@ -1,0 +1,44 @@
+# =============================================================================
+# Step 02 — UMI Consensus Calling (script2_umi_consensus.py)
+# =============================================================================
+# Run with (per-sample array job):
+#   python scripts/script2_umi_consensus.py --yaml_config config/02_umi_consensus.yaml \
+#          --sample_id <SAMPLE_ID>
+#
+# Full project settings are documented in pipeline_config.yaml.
+# =============================================================================
+
+# ---- Sample sheet -----------------------------------------------------------
+# TSV with columns: sample_id, sample_name
+sample_sheet: "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3-3xNNK/P3408_LUCA-TCRA3-3xNNK_samples.tsv"
+
+# ---- Input / output ---------------------------------------------------------
+input_dir:    "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3-3xNNK/01_preprocessed"
+output_dir:   "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3-3xNNK/02_umi_consensus_2"
+logs_dir:     "/cluster/project/reddy/katja/NGS_pipeline/logs/P3408_LUCA-TCRA3-3xNNK/02_umi_consensus"
+
+# ---- Run label (used in log file names) -------------------------------------
+run_label:    "P3408_LUCA-TCRA3-3xNNK"
+
+# ---- Suffix of the combined FASTQ produced by step 01 ----------------------
+combined_suffix: "_combined_trimmed.fastq.gz"
+
+# ---- Library layout ---------------------------------------------------------
+# Read structure: [spacer (spacer_min–spacer_max nt)] [UMI (umi_length nt)] [anchor] [insert]
+umi_length:      12
+anchor_sequence: "ACATGACGTCTCCCTCAGTC"   # binding region of primer
+max_mismatches:  1
+spacer_min:      0
+spacer_max:      3
+
+# ---- Consensus calling ------------------------------------------------------
+min_reads_per_umi:               2      # UMIs with < min_reads become singletons
+posterior_min_log_delta:         2.0    # positions below this threshold are called N
+consensus_placeholder_qual_char: "I"   # synthetic quality char for consensus reads
+
+# ---- Output files produced by this step -------------------------------------
+# Per sample (in output_dir/):
+#   {sample_id}_{sample_name}_consensus.fastq.gz   — multi-read UMI consensus
+#   {sample_id}_{sample_name}_singletons.fastq.gz  — single-read UMIs
+#   {sample_id}_{sample_name}_umi_summary.txt       — human-readable stats report
+#   {sample_id}_{sample_name}_consensus_qc.tsv      — per-UMI QC metrics

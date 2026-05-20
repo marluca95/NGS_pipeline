@@ -1,0 +1,31 @@
+# Input: folder that contains files like
+# GFB-64257_DMF5CDR3bGIG012xpositive.filtered.PASS.aa.tsv
+input_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3481_LUCA-TCRDMF5/extracted
+
+# Output: one CSV per peptide + run summary + logs
+output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3481_LUCA-TCRDMF5/variant_labeling_2x
+
+# File matching and AA sequence column
+input_glob: "*.filtered.PASS.aa.tsv"
+aa_column: "aa_seq"
+
+# Same pseudocount logic as notebook enrichment step
+pseudocount: 1e-9
+
+# Logging
+logs_subdir: "_logs"
+log_name: "script4_variant_labeling_dmf5_2x.log"
+
+# Suffix conventions in token after final underscore:
+#   <PEPTIDE>2xpositive, <PEPTIDE>2xnegative, and orilib
+lib_suffix: "orilib"
+neg_suffix: "2xnegative"
+pos_suffix: "2xpositive"
+
+# Peptides missing one of these conditions are skipped
+required_conditions:
+  - neg
+  - pos
+
+# Optional parse prefix before token (leave empty for DMF5 naming)
+file_token_prefix: "DMF5CDR3b"

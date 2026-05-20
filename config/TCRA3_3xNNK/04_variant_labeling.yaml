@@ -1,0 +1,57 @@
+# =============================================================================
+# Step 04 — Variant Labeling and Enrichment (script4_variant_labeling.py)
+# =============================================================================
+# Run with:
+#   python scripts/script4_variant_labeling.py --yaml_config config/04_variant_labeling.yaml
+#
+# Full project settings are documented in pipeline_config.yaml.
+# =============================================================================
+
+# ---- Input / output ---------------------------------------------------------
+input_dir:   "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3-3xNNK/03_extraction"
+output_dir:  "/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3-3xNNK/04_variant_labeling"
+logs_dir:    "/cluster/project/reddy/katja/NGS_pipeline/logs/P3408_LUCA-TCRA3-3xNNK/04_variant_labeling"
+
+# ---- Run label (used in log file names) -------------------------------------
+run_label:   "P3408_LUCA-TCRA3-3xNNK"
+
+# ---- File discovery ---------------------------------------------------------
+# Glob pattern to find input AA tables from step 03
+input_glob: "*.filtered.PASS.aa.tsv"
+
+# Column in the AA TSV that holds the amino-acid sequence
+aa_column: "aa_seq"
+
+# Token prefix used to parse the condition from filenames.
+# Filenames are expected to match the pattern:
+#   *_{file_token_prefix}{condition_suffix}.filtered.PASS.aa.tsv
+# Example:
+#   GFB-61841_3xNNKMAGE-A31xnegative.filtered.PASS.aa.tsv -> prefix = "3xNNK"
+#   GFB-61849_3xNNKoriginallib.filtered.PASS.aa.tsv       -> prefix = "3xNNK"
+file_token_prefix: "3xNNK"
+
+# ---- Condition suffixes -----------------------------------------------------
+# These suffixes follow file_token_prefix and identify each experimental condition.
+lib_suffix:   "originallib"         # unselected library baseline
+neg_suffix:   "MAGE-A31xnegative"   # negative-selection condition
+pos3x_suffix: "MAGE-A35xpositive"   # 3x positive-selection condition
+pos1x_suffix: "MAGE-A351xpositive"  # 1x positive-selection condition (optional)
+
+# Peptide groups missing any of these conditions are skipped entirely
+required_conditions:
+  - neg
+  - pos3x
+  - pos1x
+
+# ---- Enrichment calculation -------------------------------------------------
+pseudocount:  1.0e-9   # added to variant frequencies to avoid log(0)
+
+# Fold-change thresholds for status classification
+status_up:    2.0      # fold-change >= status_up   -> "Enriched"
+status_down:  0.5      # fold-change <= status_down -> "Depleted"
+
+# ---- Output files produced by this step -------------------------------------
+# Per peptide (in output_dir/):
+#   {peptide_key}.variant_labeling.csv   — enrichment ratios + specificity per variant
+# Run-level (in output_dir/):
+#   variant_labeling_summary.csv         — summary across all processed peptides

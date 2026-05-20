@@ -1,0 +1,13 @@
+# Paths where trimmed + combined FASTQs should be written
+output_dir: "/cluster/project/reddy/katja/NGS_pipeline/data/P3569_LUCA-TCRA3_KH157/preprocessed/26_04_2026_minLenght191_QScore20"
+sample_sheet: "/cluster/project/reddy/katja/NGS_pipeline/data/P3569_LUCA-TCRA3_KH157/P3569_LUCA-TCRA3_KH157_samples.tsv"
+logs_dir: "/cluster/project/reddy/katja/NGS_pipeline/logs/P3569_LUCA-TCRA3_KH157/preprocessed/18_02_2026_minLenght191_QScore20"
+bbmap_dir: "/cluster/project/reddy/marluca/NGS_pipeline/bbmap"
+
+# Trimming parameters (BBMap)
+trim: true
+qtrim: "r"
+quality_threshold: 30
+min_length: 191
+
+bbduk_xmx_gb: 64

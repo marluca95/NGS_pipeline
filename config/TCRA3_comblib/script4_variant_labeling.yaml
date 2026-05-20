@@ -1,0 +1,29 @@
+# Input: folder that contains files like
+# GFB-61826_clibKH1603xpositive.filtered.PASS.aa.tsv
+input_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/extracted
+
+# Output: one CSV per peptide + run summary + logs
+output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/variant_labeling
+
+# File matching and AA sequence column
+input_glob: "*.filtered.PASS.aa.tsv"
+aa_column: "aa_seq"
+
+# Same pseudocount logic as notebook enrichment step
+pseudocount: 1e-9
+
+# Logging
+logs_subdir: "_logs"
+log_name: "script4_variant_labeling.log"
+
+# Suffix conventions parsed from token after "_clib"
+lib_suffix: "originallib"
+neg_suffix: "2xnegative"
+pos3x_suffix: "3xpositive"
+pos1x_suffix: "31xpositive"
+
+# Peptides missing one of these conditions are skipped
+required_conditions:
+  - neg
+  - pos3x
+  - pos1x
