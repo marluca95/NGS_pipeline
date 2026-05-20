@@ -350,7 +350,7 @@ def process_fastqs(
     write_fail: bool,
     write_aa_tsv: bool,
     strategy: BaseLibraryStrategy,
-) -> None:
+) -> Counter[str]:
     """
     Process one or more FASTQs but write a SINGLE output set:
       {prefix}.filtered.PASS.fastq.gz

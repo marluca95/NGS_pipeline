@@ -35,7 +35,6 @@ spacer_max:      3
 min_reads_per_umi:               2      # UMIs with < min_reads become singletons
 posterior_min_log_delta:         2.0    # positions below this threshold are called N
 consensus_placeholder_qual_char: "I"   # synthetic quality char for consensus reads
-write_readcount_in_header:       true  # adds |n=<count> to FASTQ header
 
 # ---- Output files produced by this step -------------------------------------
 # Per sample (in output_dir/):

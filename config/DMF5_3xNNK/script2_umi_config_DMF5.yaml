@@ -15,8 +15,6 @@ min_reads_per_umi: 2
 # Suffix produced by the previous step (trim + combine)
 combined_suffix: "_combined_trimmed.fastq.gz"
 
-# Whether to add "|n=<count>" to FASTQ header (default: True)
-write_readcount_in_header: true
 
 # Library layout: allowed spacer range (default: 0–3)
 spacer_min: 0

@@ -37,3 +37,6 @@ def load_sample_sheet(
 
     return df
 
+def safe_name(s: str) -> str:
+    """Make a filesystem-safe-ish name (minimal sanitization)."""
+    return str(s).strip().replace(" ", "_").replace("/", "_")

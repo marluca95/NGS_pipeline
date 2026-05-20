@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 
 # Default paths
-DATA_DIR = Path("/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/variant_labeling")
+DATA_DIR = Path("/cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/04_variant_labeling")
 MAPPING_PATH = Path("/cluster/project/reddy/katja/NGS_pipeline/data/peptide_mapping.csv")
 OUTPUT_PATH = Path("/cluster/project/reddy/katja/NGS_pipeline/data/tcr_peptide_specificity_A3_all.csv")
 

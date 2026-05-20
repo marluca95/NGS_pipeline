@@ -21,7 +21,7 @@
 set -euo pipefail
 
 PROJECT_ROOT="/cluster/project/reddy/katja/NGS_pipeline"
-YAML="${PROJECT_ROOT}/config/TCRA3_KH157/script3_library_filtering_and_extraction.yaml"
+YAML="${PROJECT_ROOT}/config/TCRA3_KH157/script3_library_filtering_and_extraction.yaml" # make sure to sort out config structure and point to correct YAML
 TSV="${PROJECT_ROOT}/data/P3569_LUCA-TCRA3_KH157/P3569_LUCA-TCRA3_KH157_samples.tsv"
 VENV="${PROJECT_ROOT}/venv/bin/activate"
 

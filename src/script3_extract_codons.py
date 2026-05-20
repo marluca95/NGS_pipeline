@@ -26,6 +26,11 @@ def process_sample(
 ) -> None:
     """Extract codon region between anchors, translate, and write to CSV with debug stats."""
     results = []
+    ########################################################################################################################
+    #results accumulates all extracted reads in memory and is then written with writer.writerows(results). 
+    #For large FASTQ inputs this can become a significant memory spike. 
+    #Consider streaming rows directly to the CSV as you process each record (or buffering in chunks) to keep memory bounded.
+    ########################################################################################################################
 
     total_reads = 0
     extracted_reads = 0
@@ -139,7 +144,10 @@ def process_sample(
         logger.log(f"Extracted: {extracted_reads}")
         logger.log(f"Exceptions: {exceptions}")
         logger.log(f"Output written: {output_csv}")
-        logger.log(f"Extraction rate: {extracted_reads/total_reads:.3%}")
+        if total_reads > 0:
+            logger.log(f"Extraction rate: {extracted_reads/total_reads:.3%}")
+        else: 
+            logger.log("Extraction rate: N/A (no reads processed)")
 
 
         # Some quick distribution stats (only if we have data)

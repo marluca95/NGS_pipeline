@@ -49,7 +49,7 @@ from fuzzysearch import find_near_matches
 from utils.config_utils import load_pipeline_config
 from utils.logging_utils import setup_pipeline_logging
 from utils.metrics_utils import write_sample_metrics
-from utils.sample_utils import load_sample_sheet
+from utils.sample_utils import load_sample_sheet, safe_name
 
 SCRIPT_NAME = "script2_umi_consensus"
 logger = logging.getLogger(__name__)
@@ -65,7 +65,6 @@ def parse_yaml(yaml_file: str) -> dict:
             "max_mismatches": 1,
             "min_reads_per_umi": 2,
             "umi_bucket_count": 64,
-            "write_readcount_in_header": True,
             "spacer_min": 0,
             "spacer_max": 3,
             "posterior_min_log_delta": 2.0,
@@ -174,9 +173,9 @@ def collapse_umis_posterior(
     seqs: List[str],
     quals: List[List[int]],
     min_log_delta: float = 2.0,
-) -> Tuple[str, List[int], Dict[str, float]]:
+) -> Tuple[str, Dict[str, float]]:
     if not seqs:
-        return "", [], {"len": 0.0, "nN": 0.0, "min_log_delta": 0.0, "median_log_delta": 0.0, "p10_log_delta": 0.0}
+        return "", {"len": 0.0, "nN": 0.0, "min_log_delta": 0.0, "median_log_delta": 0.0, "p10_log_delta": 0.0}
 
     read_length = max(len(s) for s in seqs)
     consensus_bases: List[str] = []
@@ -234,8 +233,7 @@ def collapse_umis_posterior(
 
 
 # -------- main per-sample processing --------
-def process_one_sample(sample_id: str, sample_name: str, cfg: dict) -> None:
-    
+def process_one_sample(sample_id: str, sample_name: str, cfg: dict) -> Dict[str, Union[int, float]]:
     # get sample paths and fastaQ files
     sample_label = f"{sample_id}_{(sample_name)}"
     in_base = Path(cfg["input_dir"])
@@ -515,7 +513,7 @@ def main() -> None:
         names = g["sample_name"].dropna().unique()
         if len(names) != 1:
             raise ValueError(f"sample_id={sample_id} has multiple sample_name values: {names}")
-        sample_name = str(names[0])
+        sample_name = safe_name(str(names[0]))  # make filesystem-safe name for outputs like in script1_preprocessing
         stats = process_one_sample(str(sample_id), sample_name, cfg)
         write_sample_metrics(
             metrics_path=metrics_path,

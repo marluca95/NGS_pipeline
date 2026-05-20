@@ -15,7 +15,7 @@ from utils.logging_utils import (
     setup_pipeline_logging,
 )
 from utils.metrics_utils import write_sample_metrics
-from utils.sample_utils import load_sample_sheet
+from utils.sample_utils import load_sample_sheet, safe_name
 
 SCRIPT_NAME = "script1_preprocessing"
 logger = logging.getLogger(__name__)
@@ -67,10 +67,6 @@ def parse_arguments_from_yaml(yaml_file: str) -> Dict[str, Any]:
         path_keys=("output_dir", "bbmap_dir", "logs_dir"),
     )
 
-
-def safe_name(s: str) -> str:
-    """Make a filesystem-safe-ish name (minimal sanitization)."""
-    return str(s).strip().replace(" ", "_").replace("/", "_")
 
 
 def wait_for_file(filepath: Path, timeout: int = 600, interval: int = 5) -> bool:

@@ -34,6 +34,11 @@ def trimming_single_end(input_fastq_gz: str, output_fastq_gz: str,
         f"qtrim={qtrim} trimq={quality_threshold} minlength={min_length}"
     )
     print(f"Running: {cmd}")
+    ########################################################################################################################
+    #subprocess.run(cmd, shell=True) executes a formatted shell string that includes user/config-provided paths and parameters. 
+    #This is avoidable and creates shell-injection and quoting issues (e.g., spaces in paths). 
+    #Prefer passing a list of args with shell=False (or at least properly quoting/escaping inputs) as done in the newer scripts/script1_preprocessing.py.
+    ########################################################################################################################
     try:
         subprocess.run(cmd, check=True, shell=True)
         return {"status": "success"}
@@ -42,6 +47,11 @@ def trimming_single_end(input_fastq_gz: str, output_fastq_gz: str,
 
 
 def combine_gz_fastqs(input_files, combined_out):
+    ########################################################################################################################
+    #combine_gz_fastqs reads each input FASTQ fully into memory (in_handle.read()) before writing. 
+    #For large NGS FASTQs this can cause very large memory spikes. 
+    #Prefer streaming copy (e.g., shutil.copyfileobj) with a fixed buffer size, as implemented in scripts/script1_preprocessing.py.
+    ###############################################################################################################################
     """
     Concatenate gzipped FASTQ files safely by binary concatenation.
     This is valid for gzip: concatenated gzip members are readable by gzip tools and SeqIO.

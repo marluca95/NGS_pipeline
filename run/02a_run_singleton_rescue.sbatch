@@ -19,7 +19,7 @@
 set -euo pipefail
 
 PROJECT_ROOT="/cluster/project/reddy/katja/NGS_pipeline"
-YAML="${PROJECT_ROOT}/config/TCRA3_KH157/script2a_singleton_rescue.yaml"
+YAML="${PROJECT_ROOT}/config/TCRA3_KH157/script2a_singleton_rescue.yaml" # make sure to sort out config structure and point to correct YAML
 VENV="${PROJECT_ROOT}/venv/bin/activate"
 
 # ---------------------------------------------------------------------------

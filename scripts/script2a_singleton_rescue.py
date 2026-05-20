@@ -146,7 +146,7 @@ def rescue_one_sample(
 
 # ---------------- main ----------------
 def main():
-    ap = argparse.ArgumentParser(description="Singleton rescue: extract 33bp after WT anchor, keep variants seen >=3 UMIs")
+    ap = argparse.ArgumentParser(description="Singleton rescue: extract 33bp after WT anchor, keep variants seen >=2 UMIs")
     ap.add_argument("--yaml_config", required=True)
     ap.add_argument("--sample_id", default=None, help="Optional: run only one sample_id")
     args = ap.parse_args()
