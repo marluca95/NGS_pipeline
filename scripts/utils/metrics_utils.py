@@ -36,7 +36,8 @@ def write_sample_metrics(
 
     Creates the file with a header row if it does not exist yet.
     Appends without re-reading the file, so it is safe to call once per sample
-    inside a loop (array job or sequential).
+    inside a loop (sequential). 
+    # Not safe for concurrent writes (e.g. SLURM array jobs) without locking or per-sample output files!!!
 
     Args:
         metrics_path: Path to the TSV file (created if needed).
