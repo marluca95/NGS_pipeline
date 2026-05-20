@@ -22,7 +22,7 @@ sample_sheet.tsv
 01_preprocessed/*_combined_trimmed.fastq.gz
 	-> script2_umi_consensus.py
 02_umi_consensus/*_consensus.fastq.gz + *_singletons.fastq.gz
-	-> Script2a_singleton_rescue.py (optional)
+	-> script2a_singleton_rescue.py (optional)
 02_umi_consensus/*_singletons_rescued.fastq.gz
 	-> script3_library_filtering_and_extraction.py
 03_extracted/*.filtered.PASS.aa.tsv
