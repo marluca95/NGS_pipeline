@@ -1,0 +1,47 @@
+# Paired-Chain Pipeline — Step 03: Paired Filtering and Extraction config
+# Project: P3620_LUCA-TCRDMF5-abDMS
+# Library mode: ab-1xNNK-1xNNK
+#   Beta chain (CDR3β): max 1 NNK-mutated codon from WT (33 nt / 11 codons)
+#   Alpha chain (CDR3α): max 1 NNK-mutated codon from WT (30 nt / 10 codons)
+
+samples_tsv: "/cluster/project/reddy/marluca/NGS_pipeline/data/P3620_LUCA-TCRDMF5-abDMS/P3620_LUCA-TCRDMF5-abDMS_samples.tsv"
+
+input_dir:  "/cluster/project/reddy/marluca/NGS_pipeline/data/P3620_LUCA-TCRDMF5-abDMS/02_umi_consensus"
+output_dir: "/cluster/project/reddy/marluca/NGS_pipeline/data/P3620_LUCA-TCRDMF5-abDMS/03_extraction"
+logs_dir:   "/cluster/project/reddy/marluca/NGS_pipeline/logs/P3620_LUCA-TCRDMF5-abDMS/03_extraction"
+
+run_label: "P3620_LUCA-TCRDMF5-abDMS"
+
+# Input suffixes: consensus and rescued singleton FASTQ files (from script2 / script2a)
+input_suffixes_consensus_beta:   "_consensus_beta.fastq.gz"
+input_suffixes_consensus_alpha:  "_consensus_alpha.fastq.gz"
+input_suffixes_singletons_beta:  "_singletons_rescued_beta.fastq.gz"
+input_suffixes_singletons_alpha: "_singletons_rescued_alpha.fastq.gz"
+
+# Library mode
+library_mode: "ab-1xNNK-1xNNK"
+
+# Anchors for AA-extraction (different from UMI-extraction anchors in script2)
+# These are searched within the insert sequence to locate the CDR3 region
+anchor_beta:  "TCTGGTGCCTTGTCCAAA"    # 18 nt
+anchor_alpha: "TCAGCCACCTACCTCTGT"    # 18 nt
+anchor_max_mismatches: 0              # exact match recommended; increase if yield is low
+
+# Region lengths to extract after the anchor
+region_length_beta_nt:  33   # 11 codons
+region_length_alpha_nt: 30   # 10 codons
+
+# NOTE: extracted regions are reverse-complemented to match design orientation.
+# Verify by checking that WT reads produce empty beta_mut_pos and alpha_mut_pos.
+
+# Wild-type nucleotide sequences (design orientation, post-RC)
+WT_nt_beta:  "GCCAGCAGCCTAAGTTTCGGCACTGAAGCTTTC"   # 33 nt, 11 codons, CDR3β WT
+WT_nt_alpha: "GCCGTGAACTTCGGAGGAGGAAAGCTTATC"      # 30 nt, 10 codons, CDR3α WT
+
+# Maximum mutated codons per chain (must be 1 for ab-1xNNK-1xNNK)
+max_mutated_codons_per_chain: 1
+
+# Quality filters
+drop_if_contains_N: true
+write_fail_fastq: false
+write_aa_tsv: true
