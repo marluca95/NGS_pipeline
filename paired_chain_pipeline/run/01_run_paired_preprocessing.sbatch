@@ -22,6 +22,8 @@ VENV="${PROJECT_ROOT}/venv/bin/activate"
 
 mkdir -p "${PROJECT_ROOT}/logs/P3620_LUCA-TCRDMF5-abDMS/01_preprocessed"
 
+module load jdk/8u141-b15
+
 cd "${PIPELINE_ROOT}/scripts"
 source "${VENV}"
 

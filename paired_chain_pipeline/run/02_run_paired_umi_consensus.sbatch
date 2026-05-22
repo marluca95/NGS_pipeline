@@ -17,12 +17,23 @@
 #SBATCH --mem-per-cpu=16G
 #SBATCH --time=48:00:00
 
-set -euo pipefail
-
 PROJECT_ROOT="/cluster/project/reddy/marluca/NGS_pipeline"
 PIPELINE_ROOT="${PROJECT_ROOT}/paired_chain_pipeline"
 YAML="${YAML:-${PIPELINE_ROOT}/config/P3620_abDMS/script2_paired_umi_config.yaml}"
 VENV="${PROJECT_ROOT}/venv/bin/activate"
+
+# Auto-submit as array job if invoked without --array
+if [[ -z "${SLURM_ARRAY_TASK_ID+x}" ]]; then
+    TSV=$(awk -F': ' '/^sample_sheet:/ {gsub(/"/, "", $2); print $2; exit}' "${YAML}")
+    N=$(awk -F'\t' 'NR>1 {print $1}' "${TSV}" | sort -u | wc -l)
+    mkdir -p "${PROJECT_ROOT}/logs/P3620_LUCA-TCRDMF5-abDMS/02_umi_consensus"
+    echo "Auto-submitting as array job: 0-$((N-1)) tasks"
+    exec sbatch --array=0-$((N-1)) "${PIPELINE_ROOT}/run/02_run_paired_umi_consensus.sbatch"
+fi
+
+set -euo pipefail
+
+mkdir -p "${PROJECT_ROOT}/logs/P3620_LUCA-TCRDMF5-abDMS/02_umi_consensus"
 
 if [[ ! -f "${YAML}" ]]; then
     echo "ERROR: YAML config not found: ${YAML}" >&2
@@ -41,7 +52,6 @@ if [[ -z "${SAMPLE_ID:-}" ]]; then
     exit 1
 fi
 
-mkdir -p "${PROJECT_ROOT}/logs/P3620_LUCA-TCRDMF5-abDMS/02_umi_consensus"
 
 cd "${PIPELINE_ROOT}/scripts"
 source "${VENV}"

@@ -17,12 +17,23 @@
 #SBATCH --mem-per-cpu=8G
 #SBATCH --time=04:00:00
 
-set -euo pipefail
-
 PROJECT_ROOT="/cluster/project/reddy/marluca/NGS_pipeline"
 PIPELINE_ROOT="${PROJECT_ROOT}/paired_chain_pipeline"
 YAML="${YAML:-${PIPELINE_ROOT}/config/P3620_abDMS/script3_paired_extraction_config.yaml}"
 VENV="${PROJECT_ROOT}/venv/bin/activate"
+
+# Auto-submit as array job if invoked without --array
+if [[ -z "${SLURM_ARRAY_TASK_ID+x}" ]]; then
+    TSV=$(awk -F': ' '/^samples_tsv:/ {gsub(/"/, "", $2); print $2; exit}' "${YAML}")
+    N=$(awk -F'\t' 'NR>1 {print $1}' "${TSV}" | sort -u | wc -l)
+    mkdir -p "${PROJECT_ROOT}/logs/P3620_LUCA-TCRDMF5-abDMS/03_extraction"
+    echo "Auto-submitting as array job: 0-$((N-1)) tasks"
+    exec sbatch --array=0-$((N-1)) "${PIPELINE_ROOT}/run/03_run_paired_extraction.sbatch"
+fi
+
+set -euo pipefail
+
+mkdir -p "${PROJECT_ROOT}/logs/P3620_LUCA-TCRDMF5-abDMS/03_extraction"
 
 if [[ ! -f "${YAML}" ]]; then
     echo "ERROR: YAML config not found: ${YAML}" >&2

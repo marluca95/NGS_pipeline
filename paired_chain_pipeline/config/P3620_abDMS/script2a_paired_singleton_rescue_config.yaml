@@ -15,8 +15,8 @@ singleton_suffix_alpha: "_singletons_alpha.fastq.gz"
 
 # AA-extraction anchors (same as script3) for variant region identification
 # These are used to locate the variable CDR3 region within the singleton read
-anchor_beta:  "TCTGGTGCCTTGTCCAAA"    # beta AA-extraction anchor
-anchor_alpha: "TCAGCCACCTACCTCTGT"    # alpha AA-extraction anchor
+anchor_beta:  "TCTGGTGCCTTGTCCAAA"    # beta AA-extraction anchor (fully present in insert)
+anchor_alpha: "CTACCTCTGT"            # trailing 10 nt of alpha AA anchor (first 8 nt overlap with UMI anchor)
 
 # Variable region lengths
 var_len_beta:  33   # 11 codons

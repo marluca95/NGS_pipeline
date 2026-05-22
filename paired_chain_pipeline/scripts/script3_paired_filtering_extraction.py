@@ -82,6 +82,10 @@ def parse_yaml(path: str) -> dict:
             "logs_dir": None,
             "input_suffixes_singletons_beta": "",
             "input_suffixes_singletons_alpha": "",
+            # Beta (R1) is anti-sense → RC needed; alpha (R2) is sense → no RC.
+            # Override in config if your library orientation differs.
+            "apply_rc_beta": True,
+            "apply_rc_alpha": False,
         },
         path_keys=("output_dir", "samples_tsv", "input_dir", "logs_dir"),
     )
@@ -312,6 +316,8 @@ def process_sample(
     region_len_beta: int, region_len_alpha: int,
     dropN: bool,
     write_fail: bool,
+    apply_rc_beta: bool = True,
+    apply_rc_alpha: bool = False,
 ) -> Counter:
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -361,7 +367,8 @@ def process_sample(
                     if fail_fh:
                         fail_writer.writerow([read_id, "beta_region_too_short", beta_seq, alpha_seq])
                     continue
-                beta_region = revcomp(beta_region)
+                if apply_rc_beta:
+                    beta_region = revcomp(beta_region)
 
                 # --- Alpha region extraction ---
                 hit_a = find_anchor(alpha_seq, anchor_alpha, anchor_mm)
@@ -377,7 +384,8 @@ def process_sample(
                     if fail_fh:
                         fail_writer.writerow([read_id, "alpha_region_too_short", beta_seq, alpha_seq])
                     continue
-                alpha_region = revcomp(alpha_region)
+                if apply_rc_alpha:
+                    alpha_region = revcomp(alpha_region)
 
                 # --- N-content filter ---
                 if dropN and ("N" in beta_region):
@@ -480,6 +488,8 @@ def main() -> None:
         region_len_alpha=int(cfg["region_length_alpha_nt"]),
         dropN=bool(cfg["drop_if_contains_N"]),
         write_fail=bool(cfg["write_fail_fastq"]),
+        apply_rc_beta=bool(cfg.get("apply_rc_beta", True)),
+        apply_rc_alpha=bool(cfg.get("apply_rc_alpha", False)),
     )
 
     _parts = prefix.split("_", 1)

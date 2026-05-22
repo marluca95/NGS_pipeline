@@ -1,14 +1,15 @@
 # Paired-Chain Pipeline — Step 04: Paired Variant Labeling config
 # Project: P3620_LUCA-TCRDMF5-abDMS
 #
-# Conditions (inferred from sample names in P3620):
-#   originallibrary  → library baseline
-#   GIG*minus / DRG*minus  → negative selection conditions
-#   GIG*plus  / DRG*plus   → positive selection conditions
+# Conditions and their filename suffix tokens:
+#   originallibrary   → lib   (all peptides)
+#   GIG01minus        → neg   (1x negative, all peptides)
+#   GIG01plus         → pos1x (1x positive, all peptides)
+#   GIG02minus-minus  → neg2x (2x negative, GIG02 only)
+#   GIG02plus-plus    → pos2x (2x positive, GIG02 only)
 #
-# Adjust lib_suffix, neg_suffix, pos3x_suffix to match your actual condition naming.
-# The suffixes are matched against the token extracted from the FASTQ sample name
-# (everything after the first underscore in the filtered TSV filename stem).
+# Suffix matching checks longer suffixes before shorter ones, so
+# "minus-minus" is matched before "minus" and "plus-plus" before "plus".
 
 input_dir:  "/cluster/project/reddy/marluca/NGS_pipeline/data/P3620_LUCA-TCRDMF5-abDMS/03_extraction"
 output_dir: "/cluster/project/reddy/marluca/NGS_pipeline/data/P3620_LUCA-TCRDMF5-abDMS/04_variant_labeling"
@@ -23,21 +24,22 @@ input_glob: "*.filtered.PASS.paired.tsv"
 beta_aa_column:  "beta_aa"
 alpha_aa_column: "alpha_aa"
 
-# Condition suffix patterns — match the sample_name part of the filename
+# Condition suffix patterns — matched against the sample_name token in the filename stem
 lib_suffix:   "originallibrary"
-neg_suffix:   "minus"           # matches GIG01minus, DRG01minus, etc.
-pos3x_suffix: "plus"            # matches GIG01plus,  DRG01plus,  etc.
-pos1x_suffix: "__unused__"      # set to a non-matching string if only one pos condition
+neg_suffix:   "minus"          # matches GIG01minus, DRG01minus, etc.
+neg2x_suffix: "minus-minus"    # matches GIG02minus-minus (checked before neg_suffix)
+pos1x_suffix: "plus"           # matches GIG01plus, DRG01plus, etc.
+pos2x_suffix: "plus-plus"      # matches GIG02plus-plus (checked before pos1x_suffix)
 
-# Token prefix to strip before suffix matching (leave empty if not applicable)
+# Token prefix to strip before suffix matching (leave empty if not needed)
 file_token_prefix: ""
 
-# Conditions that must be present for a peptide group to be processed
+# Conditions required for a peptide group to be processed (2x conditions are optional)
 required_conditions:
   - neg
-  - pos3x
+  - pos1x
 
-# Enrichment parameters
+# Enrichment thresholds
 pseudocount: 1.0e-9
 status_up:   2.0    # enrichment ratio >= 2.0 → Enriched
 status_down: 0.5    # enrichment ratio <= 0.5 → Depleted

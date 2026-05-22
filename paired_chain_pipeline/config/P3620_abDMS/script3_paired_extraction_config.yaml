@@ -22,17 +22,24 @@ input_suffixes_singletons_alpha: "_singletons_rescued_alpha.fastq.gz"
 library_mode: "ab-1xNNK-1xNNK"
 
 # Anchors for AA-extraction (different from UMI-extraction anchors in script2)
-# These are searched within the insert sequence to locate the CDR3 region
-anchor_beta:  "TCTGGTGCCTTGTCCAAA"    # 18 nt
-anchor_alpha: "TCAGCCACCTACCTCTGT"    # 18 nt
+# These are searched within the insert sequence (= everything after the UMI anchor) to
+# locate the CDR3 region.
+# NOTE: The alpha UMI anchor (AGCCCAGTGATTCAGCCAC) and the full alpha AA anchor
+# (TCAGCCACCTACCTCTGT) overlap by 8 nt (TCAGCCAC). Script2 strips the UMI anchor, so
+# only the trailing 10 nt (CTACCTCTGT) remain in the insert.
+anchor_beta:  "TCTGGTGCCTTGTCCAAA"    # 18 nt; fully present in beta insert
+anchor_alpha: "CTACCTCTGT"            # 10 nt; trailing portion after UMI-anchor overlap
 anchor_max_mismatches: 0              # exact match recommended; increase if yield is low
 
 # Region lengths to extract after the anchor
 region_length_beta_nt:  33   # 11 codons
 region_length_alpha_nt: 30   # 10 codons
 
-# NOTE: extracted regions are reverse-complemented to match design orientation.
-# Verify by checking that WT reads produce empty beta_mut_pos and alpha_mut_pos.
+# Orientation of extracted regions:
+# Beta (R1): insert is anti-sense → revcomp required to get coding sequence.
+# Alpha (R2): insert is already sense → no revcomp.
+apply_rc_beta:  true
+apply_rc_alpha: false
 
 # Wild-type nucleotide sequences (design orientation, post-RC)
 WT_nt_beta:  "GCCAGCAGCCTAAGTTTCGGCACTGAAGCTTTC"   # 33 nt, 11 codons, CDR3β WT
