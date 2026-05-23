@@ -1,11 +1,11 @@
-samples_tsv: /cluster/project/reddy/katja/NGS_pipeline/scripts/P3408_LUCA-TCRA3_samples.tsv
+samples_tsv: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/P3408_LUCA-TCRA3_samples.tsv
 
-singleton_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/umi/30_01_2026_FULLRUN
-output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/umi/30_01_2026_FULLRUN
+singleton_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/02_umi/14_05_2026_FULLRUN
+output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/02_umi/14_05_2026_FULLRUN
 
 wt_anchor: "CCTGGTGCCCGGCCCGAA"
 var_len: 33
-min_umis: 3
+min_umis: 10
 
 # how to map sample sheet → filenames
 # script assumes singleton files are named like: <sample_id>_<sample_name>_singletons.fastq.gz

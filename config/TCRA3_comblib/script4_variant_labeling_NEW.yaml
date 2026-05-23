@@ -1,9 +1,8 @@
 # Input: folder that contains files like
 # GFB-61826_clibKH1603xpositive.filtered.PASS.aa.tsv
 input_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/03_extracted/19_05_2026_minlenght191_Q30/
-
 # Output: one CSV per peptide + run summary + logs
-output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/variant_labeling
+output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/04_variant_labeling/19_05_2026_minlenght191_Q30/single_positive_3x1x/
 
 # File matching and AA sequence column
 input_glob: "*.filtered.PASS.aa.tsv"
@@ -20,10 +19,17 @@ log_name: "script4_variant_labeling.log"
 lib_suffix: "originallib"
 neg_suffix: "2xnegative"
 pos3x_suffix: "3xpositive"
-pos1x_suffix: "31xpositive"
+pos3x1x_suffix: "31xpositive"
 
 # Peptides missing one of these conditions are skipped
 required_conditions:
   - neg
-  - pos3x
-  - pos1x
+  
+# Positive-selection mode used by script4_variant_labeling.py
+# valid strings = "single_positive", "combined_positive", "monotonic_strict"
+# valid strings = "single_positive", "combined_positive", "monotonic_strict"
+positive_mode: "single_positive"
+
+# Required only when positive_mode: single_positive
+# valid strings = "pos3x1x", "pos3x"
+single_positive_source: "pos3x1x"

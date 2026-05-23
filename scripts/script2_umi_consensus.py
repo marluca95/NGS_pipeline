@@ -42,7 +42,7 @@ import shutil
 import traceback
 from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Union
 
 from Bio import SeqIO
 from fuzzysearch import find_near_matches

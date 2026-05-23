@@ -1,5 +1,5 @@
 # ================= OUTPUT =================
-output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/03_extracted/19_05_2026_minlenght191_Q30
+output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3569_LUCA-TCRA3_KH157/03_extracted/22_05_2026_KH157
 
 # ================= Anchor / extraction =================
 anchor_sequence: "CCTGGTGCCCGGCCCGAA"
@@ -38,10 +38,10 @@ max_mutated_codons: 3
 # ================= Sample-driven input =================
 
 # Mapping from sample_id -> sample_name
-samples_tsv: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/P3408_LUCA-TCRA3_samples.tsv
+samples_tsv: /cluster/project/reddy/katja/NGS_pipeline/data/P3569_LUCA-TCRA3_KH157/P3569_LUCA-TCRA3_KH157_samples.tsv
 
 # Folder containing processed FASTQs
-input_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/02_umi/14_05_2026_FULLRUN
+input_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3569_LUCA-TCRA3_KH157/02_umi/11_05_2026_KH157
 
 # File endings to look for
 # If one is empty ("") it will be skipped.

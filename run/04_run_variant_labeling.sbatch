@@ -19,7 +19,7 @@
 set -euo pipefail
 
 PROJECT_ROOT="/cluster/project/reddy/katja/NGS_pipeline"
-YAML="${PROJECT_ROOT}/config/04_variant_labeling.yaml" # make sure to sort out config structure and point to correct YAML
+YAML="${PROJECT_ROOT}/config/TCRA3_comblib/script04_variant_labeling.yaml"
 VENV="${PROJECT_ROOT}/venv/bin/activate"
 
 # ---------------------------------------------------------------------------

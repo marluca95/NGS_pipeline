@@ -6,7 +6,7 @@
 #
 # Submit:
 #   cd /cluster/project/reddy/katja/NGS_pipeline
-#   TSV="scripts/P3408_LUCA-TCRA3_samples.tsv"
+#   TSV="data/P3408_LUCA-TCRA3/P3408_LUCA-TCRA3_samples.tsv"
 #   N=$(awk -F'\t' 'NR>1 {print $1}' "${TSV}" | sort -u | wc -l)
 #   sbatch --array=0-$((N-1)) run/03_run_extraction.sbatch
 # =============================================================================
@@ -21,8 +21,8 @@
 set -euo pipefail
 
 PROJECT_ROOT="/cluster/project/reddy/katja/NGS_pipeline"
-YAML="${PROJECT_ROOT}/config/TCRA3_KH157/script3_library_filtering_and_extraction.yaml" # make sure to sort out config structure and point to correct YAML
-TSV="${PROJECT_ROOT}/data/P3569_LUCA-TCRA3_KH157/P3569_LUCA-TCRA3_KH157_samples.tsv"
+YAML="${PROJECT_ROOT}/config/TCRA3_comblib/script3_library_filtering_and_extraction.yaml"
+TSV="${PROJECT_ROOT}/data/P3408_LUCA-TCRA3/P3408_LUCA-TCRA3_samples.tsv"
 VENV="${PROJECT_ROOT}/venv/bin/activate"
 
 # ---------------------------------------------------------------------------

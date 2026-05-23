@@ -1,9 +1,9 @@
 # Input: folder that contains files like
 # GFB-61826_clibKH1603xpositive.filtered.PASS.aa.tsv
-input_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3569_LUCA-TCRA3_KH157/03_extracted/22_05_2026_KH157/
+input_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/extracted
 
 # Output: one CSV per peptide + run summary + logs
-output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3569_LUCA-TCRA3_KH157/04_variant_labeling/22_05_2026_KH157
+output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3408_LUCA-TCRA3/variant_labeling
 
 # File matching and AA sequence column
 input_glob: "*.filtered.PASS.aa.tsv"

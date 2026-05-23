@@ -11,6 +11,8 @@ from utils.logging_utils import setup_pipeline_logging
 
 SCRIPT_NAME = "script4_variant_labeling"
 logger = logging.getLogger(__name__)
+VALID_POSITIVE_MODES = {"single_positive", "combined_positive", "monotonic_strict"}
+VALID_SINGLE_POSITIVE_SOURCES = {"pos3x1x", "pos3x"}
 
 
 def parse_yaml(yaml_path: str) -> dict:
@@ -25,11 +27,13 @@ def parse_yaml(yaml_path: str) -> dict:
             "lib_suffix": "originallib",
             "neg_suffix": "2xnegative",
             "pos3x_suffix": "3xpositive",
-            "pos1x_suffix": "31xpositive",
-            "required_conditions": ["neg", "pos3x", "pos1x"],
+            "pos3x1x_suffix": "31xpositive",
+            "required_conditions": ["neg", "pos3x", "pos3x1x"],
             "logs_dir": None,
             "status_up": 2.0,     # Enriched if >= 2
             "status_down": 0.5,   # Depleted if <= 0.5
+            "positive_mode": "combined_positive",
+            "single_positive_source": "pos3x",
             # Token prefix used to parse conditions from filenames.
             # Leave empty ("") to match any text before the condition suffix.
             "file_token_prefix": "clib",
@@ -38,7 +42,25 @@ def parse_yaml(yaml_path: str) -> dict:
     )
     if not cfg.get("logs_dir"):
         cfg["logs_dir"] = str(Path(cfg["output_dir"]) / str(cfg.get("logs_subdir", "_logs")))
+    cfg["positive_mode"] = normalize_positive_mode(cfg.get("positive_mode"))
+    cfg["single_positive_source"] = normalize_single_positive_source(cfg.get("single_positive_source"))
     return cfg
+
+
+def normalize_positive_mode(value: Optional[str]) -> str:
+    mode = str(value or "combined_positive").strip().lower()
+    if mode not in VALID_POSITIVE_MODES:
+        raise ValueError(f"Unsupported positive_mode {value!r}. Expected one of {sorted(VALID_POSITIVE_MODES)}")
+    return mode
+
+
+def normalize_single_positive_source(value: Optional[str]) -> str:
+    source = str(value or "pos3x").strip().lower()
+    if source not in VALID_SINGLE_POSITIVE_SOURCES:
+        raise ValueError(
+            f"Unsupported single_positive_source {value!r}. Expected one of {sorted(VALID_SINGLE_POSITIVE_SOURCES)}"
+        )
+    return source
 
 
 def parse_condition_token(
@@ -46,7 +68,7 @@ def parse_condition_token(
     lib_suffix: str,
     neg_suffix: str,
     pos3x_suffix: str,
-    pos1x_suffix: str,
+    pos3x1x_suffix: str,
     file_token_prefix: str = "",
 ) -> Tuple[Optional[str], Optional[str]]:
     # Strip known prefix if provided (e.g., "clib")
@@ -59,8 +81,8 @@ def parse_condition_token(
         return token[: -len(neg_suffix)].rstrip("-_") or token, "neg"
     if token.endswith(pos3x_suffix):
         return token[: -len(pos3x_suffix)].rstrip("-_") or token, "pos3x"
-    if token.endswith(pos1x_suffix):
-        return token[: -len(pos1x_suffix)].rstrip("-_") or token, "pos1x"
+    if token.endswith(pos3x1x_suffix):
+        return token[: -len(pos3x1x_suffix)].rstrip("-_") or token, "pos3x1x"
     return None, None
 
 
@@ -92,7 +114,7 @@ def discover_input_files(cfg: dict) -> Tuple[Path, Dict[str, Dict[str, Path]], L
             lib_suffix=cfg["lib_suffix"],
             neg_suffix=cfg["neg_suffix"],
             pos3x_suffix=cfg["pos3x_suffix"],
-            pos1x_suffix=cfg["pos1x_suffix"],
+            pos3x1x_suffix=cfg["pos3x1x_suffix"],
             file_token_prefix=cfg["file_token_prefix"],
         )
 
@@ -171,6 +193,43 @@ def combine_status(a: str, b: str) -> str:
     return "NoChange"
 
 
+def combine_statuses(statuses: List[str]) -> str:
+    if not statuses:
+        raise ValueError("At least one status is required to combine")
+    combined = statuses[0]
+    for status in statuses[1:]:
+        combined = combine_status(combined, status)
+    return combined
+
+
+def get_positive_labels_for_mode(files: Dict[str, Path], cfg: dict) -> List[str]:
+    mode = cfg["positive_mode"]
+    available = [label for label in ("pos3x", "pos3x1x") if label in files]
+
+    if mode == "single_positive":
+        source = cfg["single_positive_source"]
+        if source not in files:
+            raise ValueError(f"selected positive source {source!r} is missing")
+        return [source]
+
+    if mode == "combined_positive":
+        if not available:
+            raise ValueError("no positive condition files are available")
+        return available
+
+    if mode == "monotonic_strict":
+        missing = [label for label in ("pos3x", "pos3x1x") if label not in files]
+        if missing:
+            raise ValueError(f"missing positive condition files: {missing}")
+        return ["pos3x", "pos3x1x"]
+
+    raise ValueError(f"Unsupported positive_mode {mode!r}")
+
+
+def monotonic_constraint_satisfied(row: pd.Series) -> bool:
+    return float(row["freq_lib"]) < float(row["freq_pos3x"]) < float(row["freq_pos3x1x"])
+
+
 def annotate_row(row: pd.Series) -> int:
     """
     Exactly as in variant_analysis.ipynb:
@@ -191,9 +250,10 @@ def annotate_row(row: pd.Series) -> int:
         return 0
     return 2
 
-def add_status_and_specificity(merged: pd.DataFrame, cfg: dict) -> None:
+def add_status_and_specificity(merged: pd.DataFrame, cfg: dict, positive_labels: List[str]) -> None:
     up = float(cfg.get("status_up", 2.0))
     down = float(cfg.get("status_down", 0.5))
+    mode = cfg["positive_mode"]
 
     # Always required:
     base_needed = [
@@ -209,30 +269,50 @@ def add_status_and_specificity(merged: pd.DataFrame, cfg: dict) -> None:
     merged["pos3x_vs_neg_status"] = merged["enrich_pos3x_vs_neg"].apply(lambda v: flag(float(v), up, down))
     merged["pos3x_vs_lib_status"] = merged["enrich_pos3x_vs_lib"].apply(lambda v: flag(float(v), up, down))
 
-    # If pos1x exists, combine; otherwise just use pos3x
-    has_pos1x = ("enrich_pos1x_vs_neg" in merged.columns) and ("enrich_pos1x_vs_lib" in merged.columns)
+    if "pos3x1x" in positive_labels and "enrich_pos3x1x_vs_neg" in merged.columns and "enrich_pos3x1x_vs_lib" in merged.columns:
+        merged["pos3x1x_vs_neg_status"] = merged["enrich_pos3x1x_vs_neg"].apply(lambda v: flag(float(v), up, down))
+        merged["pos3x1x_vs_lib_status"] = merged["enrich_pos3x1x_vs_lib"].apply(lambda v: flag(float(v), up, down))
 
-    if has_pos1x:
-        merged["pos1x_vs_neg_status"] = merged["enrich_pos1x_vs_neg"].apply(lambda v: flag(float(v), up, down))
-        merged["pos1x_vs_lib_status"] = merged["enrich_pos1x_vs_lib"].apply(lambda v: flag(float(v), up, down))
-
+    if mode == "single_positive":
+        source = cfg["single_positive_source"]
+        merged["pos_vs_neg_status"] = merged[f"{source}_vs_neg_status"]
+        merged["pos_vs_lib_status"] = merged[f"{source}_vs_lib_status"]
+    elif mode == "combined_positive":
+        status_labels = [label for label in ("pos3x", "pos3x1x") if label in positive_labels]
         merged["pos_vs_neg_status"] = [
-            combine_status(a, b) for a, b in zip(merged["pos3x_vs_neg_status"], merged["pos1x_vs_neg_status"])
+            combine_statuses([row[f"{label}_vs_neg_status"] for label in status_labels])
+            for _, row in merged.iterrows()
         ]
         merged["pos_vs_lib_status"] = [
-            combine_status(a, b) for a, b in zip(merged["pos3x_vs_lib_status"], merged["pos1x_vs_lib_status"])
+            combine_statuses([row[f"{label}_vs_lib_status"] for label in status_labels])
+            for _, row in merged.iterrows()
         ]
+    elif mode == "monotonic_strict":
+        pos_vs_neg_statuses: List[str] = []
+        pos_vs_lib_statuses: List[str] = []
+        for _, row in merged.iterrows():
+            monotonic_ok = monotonic_constraint_satisfied(row)
+            neg_status = combine_statuses([row.get("pos3x_vs_neg_status"), row.get("pos3x1x_vs_neg_status")])
+            lib_status = combine_statuses([row.get("pos3x_vs_lib_status"), row.get("pos3x1x_vs_lib_status")])
+            if not monotonic_ok:
+                if neg_status == "Enriched":
+                    neg_status = "NoChange"
+                if lib_status == "Enriched":
+                    lib_status = "NoChange"
+            pos_vs_neg_statuses.append(neg_status)
+            pos_vs_lib_statuses.append(lib_status)
+        merged["pos_vs_neg_status"] = pos_vs_neg_statuses
+        merged["pos_vs_lib_status"] = pos_vs_lib_statuses
     else:
-        merged["pos_vs_neg_status"] = merged["pos3x_vs_neg_status"]
-        merged["pos_vs_lib_status"] = merged["pos3x_vs_lib_status"]
+        raise ValueError(f"Unsupported positive_mode {mode!r}")
 
     merged["neg_vs_lib_status"] = merged["deplete_neg_lib"].apply(lambda v: flag(float(v), up, down))
     merged["specificity"] = merged.apply(annotate_row, axis=1)
 
 
-def build_variant_table_for_peptide(peptide_key: str, files: Dict[str, Path], cfg: dict) -> pd.DataFrame:
+def build_variant_table_for_peptide(peptide_key: str, files: Dict[str, Path], cfg: dict, positive_labels: List[str]) -> pd.DataFrame:
     aa_column = cfg["aa_column"]
-    labels = ["lib", "neg", "pos3x", "pos1x"]
+    labels = ["lib", "neg", "pos3x", "pos3x1x"]
     dfs = []
     for label in labels:
         if label not in files:
@@ -245,15 +325,15 @@ def build_variant_table_for_peptide(peptide_key: str, files: Dict[str, Path], cf
 
     pseudocount = float(cfg["pseudocount"])
     add_enrichment_columns(merged, pseudocount, numerator="pos3x", denominator="neg")
-    add_enrichment_columns(merged, pseudocount, numerator="pos1x", denominator="neg")
+    add_enrichment_columns(merged, pseudocount, numerator="pos3x1x", denominator="neg")
     add_enrichment_columns(merged, pseudocount, numerator="pos3x", denominator="lib")
-    add_enrichment_columns(merged, pseudocount, numerator="pos1x", denominator="lib")
+    add_enrichment_columns(merged, pseudocount, numerator="pos3x1x", denominator="lib")
     add_enrichment_columns(merged, pseudocount, numerator="neg", denominator="lib")
     if "enrich_neg_vs_lib" in merged.columns:
         merged.rename(columns={"enrich_neg_vs_lib": "deplete_neg_lib"}, inplace=True)
 
     # add statuses + specificity (0/1/2)
-    add_status_and_specificity(merged, cfg)
+    add_status_and_specificity(merged, cfg, positive_labels)
 
     return merged
 
@@ -287,13 +367,20 @@ def run(cfg: dict) -> None:
 
     for peptide_key in sorted(groups):
         files = groups[peptide_key]
-        missing = sorted(required - set(files.keys()))
+        missing = sorted((required - {"pos3x1x", "pos3x"}) - set(files.keys()))
         if missing:
             logger.warning("Skipping peptide %s because required conditions are missing: %s", peptide_key, missing)
             skipped += 1
             continue
 
-        table = build_variant_table_for_peptide(peptide_key, files, cfg)
+        try:
+            positive_labels = get_positive_labels_for_mode(files, cfg)
+        except ValueError as exc:
+            logger.warning("Skipping peptide %s because %s", peptide_key, exc)
+            skipped += 1
+            continue
+
+        table = build_variant_table_for_peptide(peptide_key, files, cfg, positive_labels)
 
         # Log specificity distribution
         spec_counts = table["specificity"].value_counts(dropna=False).to_dict()
@@ -314,7 +401,7 @@ def run(cfg: dict) -> None:
                 "input_lib": str(files["lib"]),
                 "input_neg": str(files["neg"]),
                 "input_pos3x": str(files.get("pos3x", "")),
-                "input_pos1x": str(files.get("pos1x", "")),
+                "input_pos3x1x": str(files.get("pos3x1x", "")),
             }
         )
         logger.info("Wrote peptide table: %s (%d variants)", out_file, table.shape[0])
