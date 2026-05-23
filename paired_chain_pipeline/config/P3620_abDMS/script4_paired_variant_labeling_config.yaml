@@ -40,6 +40,6 @@ required_conditions:
   - pos1x
 
 # Enrichment thresholds
-pseudocount: 1.0e-9
+pseudocount: 1.0e-6
 status_up:   2.0    # enrichment ratio >= 2.0 → Enriched
 status_down: 0.5    # enrichment ratio <= 0.5 → Depleted

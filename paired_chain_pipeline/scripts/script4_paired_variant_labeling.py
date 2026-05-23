@@ -54,7 +54,7 @@ def parse_yaml(yaml_path: str) -> dict:
             "input_glob": f"*{PAIRED_TSV_SUFFIX}",
             "beta_aa_column":  "beta_aa",
             "alpha_aa_column": "alpha_aa",
-            "pseudocount": 1e-9,
+            "pseudocount": 1e-6,
             "logs_subdir": "_logs",
             "lib_suffix":   "originallibrary",
             "neg_suffix":   "minus",
