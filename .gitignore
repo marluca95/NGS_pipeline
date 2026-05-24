@@ -22,7 +22,9 @@ Thumbs.db
 logs
 
 # Data
-data/
-shared_data/
+data/P3408_LUCA-TCRA3/
+data/P3408_LUCA-TCRA3-3xNNK/
+data/P3481_LUCA-TCRDMF5/
+data/P3569_LUCA-TCRA3_KH157/
 output/
 backup/
