@@ -1,9 +1,9 @@
 # Input: folder that contains files like
-# GFB-61826_clibKH1603xpositive.filtered.PASS.aa.tsv
-input_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3569_LUCA-TCRA3_KH157/03_extracted/22_05_2026_KH157/
+# GFB-64257_DMF5CDR3bGIG011xpositive.filtered.PASS.aa.tsv
+input_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3481_LUCA-TCRDMF5/extracted
 
 # Output: one CSV per peptide + run summary + logs
-output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3569_LUCA-TCRA3_KH157/04_variant_labeling/22_05_2026_KH157
+output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3481_LUCA-TCRDMF5/variant_labeling
 
 # File matching and AA sequence column
 input_glob: "*.filtered.PASS.aa.tsv"
@@ -16,26 +16,27 @@ pseudocount: 1e-9
 logs_subdir: "_logs"
 log_name: "script4_variant_labeling.log"
 
-# Suffix conventions parsed from token after "_clib"
-lib_suffix: "originallib"
+# Suffix conventions parsed from token after final underscore
+lib_suffix: "orilib"
 neg_suffix: "2xnegative"
 positive_suffixes:
-  pos3x: "3xpositive"
-  pos3x1x: "31xpositive"
+  pos1x: "1xpositive"
+  pos2x: "2xpositive"
 positive_order:
-  - pos3x
-  - pos3x1x
-
-# Peptides missing one of these conditions are skipped
+  - pos1x
+  - pos2x
 required_conditions:
   - neg
-  - pos3x
-  - pos3x1x
+  - pos1x
+  - pos2x
+
+# Optional parse prefix before token
+file_token_prefix: "DMF5CDR3b"
 
 # Positive-selection mode used by script4_variant_labeling.py
 # valid strings = "single_positive", "combined_positive", "monotonic_strict"
 positive_mode: "combined_positive"
 
 # Required only when positive_mode: single_positive
-# valid strings = "pos3x", "pos3x1x"
-single_positive_source: "pos3x"
+# valid strings = "pos1x", "pos2x"
+single_positive_source: "pos2x"
