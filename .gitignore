@@ -29,3 +29,5 @@ backup/
 
 # outputs
 *.pdf
+*.csv
+*.tsv
