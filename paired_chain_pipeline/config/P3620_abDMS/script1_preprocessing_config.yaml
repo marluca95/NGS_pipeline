@@ -16,6 +16,6 @@ run_label: "P3620_LUCA-TCRDMF5-abDMS"
 # 100 nt is the minimum to fully cover the CDR3 region of interest.
 # this will not cover reads with a spacer of 7nt. NGS readlength was 1nt shorter than expected, so we set min_length to 100 instead of 101.
 qtrim: "r"
-quality_threshold: 20
+quality_threshold: 30
 min_length: 100
 bbduk_xmx_gb: 64

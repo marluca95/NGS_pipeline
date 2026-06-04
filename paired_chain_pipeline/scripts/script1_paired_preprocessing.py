@@ -69,7 +69,7 @@ def parse_arguments_from_yaml(yaml_file: str) -> Dict[str, Any]:
         required_keys=("output_dir", "bbmap_dir"),
         default_values={
             "qtrim": "r",
-            "quality_threshold": 20,
+            "quality_threshold": 30,
             "min_length": 101,
             "bbduk_xmx_gb": 8,
             "logs_dir": None,
