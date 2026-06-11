@@ -26,3 +26,9 @@ data/
 shared_data/
 output/
 backup/
+
+# outputs
+*.pdf
+*.csv
+*.tsv
+*.png

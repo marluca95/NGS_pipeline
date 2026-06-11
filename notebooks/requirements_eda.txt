@@ -1,0 +1,28 @@
+# Requirements for abDMS_CDR3_enrichment_EDA.ipynb
+# Install with: pip install -r notebooks/requirements_eda.txt
+
+# Core data
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Plotting
+matplotlib>=3.5.0
+seaborn>=0.12.0
+
+# Statistics
+scipy>=1.9.0
+
+# Interactive widgets (Jupyter)
+ipywidgets>=8.0.0
+
+# Notebook infrastructure
+jupyter>=1.0.0
+notebook>=6.5.0
+nbformat>=5.0.0
+
+# ─── Enabling ipywidgets ───────────────────────────────────────────────────────
+# JupyterLab:
+#   jupyter labextension install @jupyter-widgets/jupyterlab-manager
+#
+# Classic Notebook:
+#   jupyter nbextension enable --py widgetsnbextension

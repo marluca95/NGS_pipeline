@@ -1,0 +1,38 @@
+# Paired-Chain Pipeline — Step 02: Paired UMI Consensus config
+# Project: P3620_LUCA-TCRDMF5-abDMS
+
+sample_sheet: "/cluster/project/reddy/marluca/NGS_pipeline/data/P3620_LUCA-TCRDMF5-abDMS/P3620_LUCA-TCRDMF5-abDMS_samples.tsv"
+
+input_dir:  "/cluster/project/reddy/marluca/NGS_pipeline/data/P3620_LUCA-TCRDMF5-abDMS/01_preprocessed"
+output_dir: "/cluster/project/reddy/marluca/NGS_pipeline/data/P3620_LUCA-TCRDMF5-abDMS/02_umi_consensus"
+logs_dir:   "/cluster/project/reddy/marluca/NGS_pipeline/logs/P3620_LUCA-TCRDMF5-abDMS/02_umi_consensus"
+
+run_label: "P3620_LUCA-TCRDMF5-abDMS"
+
+# Input file suffixes (output of script1)
+combined_suffix_r1: "_combined_trimmed_R1.fastq.gz"
+combined_suffix_r2: "_combined_trimmed_R2.fastq.gz"
+
+# UMI extraction parameters
+umi_length: 12
+
+# R1 = beta chain anchor for UMI extraction
+anchor_beta: "ATAGACCCCCAGCCTTACCT"
+
+# R2 = alpha chain anchor for UMI extraction
+anchor_alpha: "AGCCCAGTGATTCAGCCAC"
+
+# Fuzzy matching tolerance for anchor search
+max_mismatches: 1
+
+# Spacer range (bases between read start and UMI start)
+spacer_min: 0
+spacer_max: 7
+
+# Consensus calling
+min_reads_per_umi: 2
+posterior_min_log_delta: 2.0
+consensus_placeholder_qual_char: "I"
+
+# Bucketing for memory efficiency (power of 2 recommended)
+umi_bucket_count: 64
