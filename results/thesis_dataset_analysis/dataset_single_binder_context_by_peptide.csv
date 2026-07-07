@@ -1,0 +1,33 @@
+dataset,peptide,single_binder_context,n_tcrs
+A3,ECDPIYAAY,"Positive on one peptide, absent elsewhere",679
+A3,ECDPIYAAY,"Positive on one peptide, only 0 on other peptides",707
+A3,EGDPLILQY,"Positive on one peptide, absent elsewhere",939
+A3,EGDPLILQY,"Positive on one peptide, only 0 on other peptides",877
+A3,EMDPVTQLY,"Positive on one peptide, absent elsewhere",198
+A3,EMDPVTQLY,"Positive on one peptide, only 0 on other peptides",166
+A3,ESDPIVAQY,"Positive on one peptide, absent elsewhere",251
+A3,ESDPIVAQY,"Positive on one peptide, only 0 on other peptides",138
+A3,ETDPLTFNF,"Positive on one peptide, absent elsewhere",225
+A3,ETDPLTFNF,"Positive on one peptide, only 0 on other peptides",228
+A3,ETDPVENTY,"Positive on one peptide, absent elsewhere",194
+A3,ETDPVENTY,"Positive on one peptide, only 0 on other peptides",208
+A3,ETDPVNHMV,"Positive on one peptide, absent elsewhere",1497
+A3,ETDPVNHMV,"Positive on one peptide, only 0 on other peptides",1505
+A3,EVDPIGHLY,"Positive on one peptide, absent elsewhere",2042
+A3,EVDPIGHLY,"Positive on one peptide, only 0 on other peptides",2234
+A3,EVDPIGHVY,"Positive on one peptide, absent elsewhere",566
+A3,EVDPIGHVY,"Positive on one peptide, only 0 on other peptides",482
+A3,EVDPIRHYY,"Positive on one peptide, absent elsewhere",213
+A3,EVDPIRHYY,"Positive on one peptide, only 0 on other peptides",175
+DMF5,ELAGIGILTV,"Positive on one peptide, absent elsewhere",3521
+DMF5,ELAGIGILTV,"Positive on one peptide, only 0 on other peptides",1627
+DMF5,IMEDVGWLNV,"Positive on one peptide, absent elsewhere",4094
+DMF5,IMEDVGWLNV,"Positive on one peptide, only 0 on other peptides",4146
+DMF5,MMWDRGLGMM,"Positive on one peptide, absent elsewhere",3160
+DMF5,MMWDRGLGMM,"Positive on one peptide, only 0 on other peptides",1284
+DMF5,NLSNLGILPV,"Positive on one peptide, absent elsewhere",3290
+DMF5,NLSNLGILPV,"Positive on one peptide, only 0 on other peptides",1818
+DMF5,NMGGIGIMPV,"Positive on one peptide, absent elsewhere",2600
+DMF5,NMGGIGIMPV,"Positive on one peptide, only 0 on other peptides",1120
+DMF5,SMLGIGIVPV,"Positive on one peptide, absent elsewhere",978
+DMF5,SMLGIGIVPV,"Positive on one peptide, only 0 on other peptides",301

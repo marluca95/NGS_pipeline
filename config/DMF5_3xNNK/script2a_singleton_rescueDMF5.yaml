@@ -1,12 +1,12 @@
-samples_tsv: /cluster/project/reddy/katja/NGS_pipeline/scripts/P3481_LUCA-TCRDMF5_samples.tsv
+samples_tsv: /cluster/project/reddy/katja/NGS_pipeline/data/P3481_LUCA-TCRDMF5/P3481_LUCA-TCRDMF5_samples.tsv
 
-singleton_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3481_LUCA-TCRDMF5/umi
-output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3481_LUCA-TCRDMF5/umi
+singleton_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3481_LUCA-TCRDMF5/02_umi
+output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3481_LUCA-TCRDMF5/02_umi
 
 wt_anchor: "GGTGCCTTGTCCAAAGAA"
 
 var_len: 33
-min_umis: 3
+min_umis: 10
 
 # how to map sample sheet → filenames
 # script assumes singleton files are named like: <sample_id>_<sample_name>_singletons.fastq.gz

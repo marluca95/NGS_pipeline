@@ -8,22 +8,22 @@
 #   cd /cluster/project/reddy/katja/NGS_pipeline
 #   sbatch run/04_run_variant_labeling.sbatch
 # =============================================================================
-#SBATCH --job-name=04_variant_labeling
-#SBATCH --output=/cluster/project/reddy/katja/NGS_pipeline/logs/04_variant_labeling/slurm_%j.out
-#SBATCH --error=/cluster/project/reddy/katja/NGS_pipeline/logs/04_variant_labeling/slurm_%j.err
+#SBATCH --job-name=A3_Q30_variant_labeling
+#SBATCH --output=/cluster/project/reddy/katja/NGS_pipeline/logs/04_variant_labeling_A3/slurm_A3_Q30_combined_tcr_population_%j.out
+#SBATCH --error=/cluster/project/reddy/katja/NGS_pipeline/logs/04_variant_labeling_A3/slurm_A3_Q30_combined_tcr_population_%j.err
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=8G
-#SBATCH --time=01:00:00
+#SBATCH --time=1:00:00
 
 set -euo pipefail
 
 PROJECT_ROOT="/cluster/project/reddy/katja/NGS_pipeline"
-YAML="${PROJECT_ROOT}/config/TCRA3_comblib/script04_variant_labeling.yaml"
+YAML="${PROJECT_ROOT}/config/TCRA3_comblib/script4_variant_labeling_Q30_combined_with_tcr_population.yaml"
 VENV="${PROJECT_ROOT}/venv/bin/activate"
 
 # ---------------------------------------------------------------------------
-mkdir -p "${PROJECT_ROOT}/logs/04_variant_labeling"
+mkdir -p "${PROJECT_ROOT}/logs/04_variant_labeling_A3"
 cd "${PROJECT_ROOT}"
 source "${VENV}"
 

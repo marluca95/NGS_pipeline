@@ -1,5 +1,6 @@
 # Virtual enironments
 venv/
+venv_old/
 
 # Tools
 bbmap/

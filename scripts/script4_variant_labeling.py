@@ -242,6 +242,18 @@ def add_enrichment_columns(merged: pd.DataFrame, pseudocount: float, numerator: 
         merged[out_col] = (merged[ncol] + pseudocount) / (merged[dcol] + pseudocount)
 
 
+def add_tcr_population_column(merged: pd.DataFrame, positive_order: List[str]) -> None:
+    def get_population(row: pd.Series) -> str:
+        sources = [
+            label
+            for label in positive_order
+            if f"count_{label}" in row and float(row[f"count_{label}"]) > 0
+        ]
+        return ";".join(sources) if sources else "none"
+
+    merged["tcr_population"] = merged.apply(get_population, axis=1)
+
+
 # --- NEW: same rules as variant_analysis.ipynb ---
 def flag(val: float, up: float = 2.0, down: float = 0.5) -> str:
     if val >= up:
@@ -393,6 +405,7 @@ def build_variant_table_for_peptide(peptide_key: str, files: Dict[str, Path], cf
 
     merged = merge_counts(dfs, aa_column=aa_column)
     merged["peptide"] = peptide_key
+    add_tcr_population_column(merged, cfg["positive_order"])
 
     pseudocount = float(cfg["pseudocount"])
     for label in cfg["positive_order"]:

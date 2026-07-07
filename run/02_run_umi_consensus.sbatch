@@ -6,14 +6,14 @@
 #
 # Submit:
 #   cd /cluster/project/reddy/katja/NGS_pipeline
-#   YAML="config/TCRA3_KH157/script2_umi_config_KH157.yaml"
+#   YAML="config/DMF5_3xNNK/script2_umi_config_DMF5.yaml"
 #   TSV=$(awk -F': ' '/^sample_sheet:/ {gsub(/"/, "", $2); print $2; exit}' "${YAML}")
 #   N=$(awk -F'\t' 'NR>1 {print $1}' "${TSV}" | sort -u | wc -l)
 #   sbatch --array=0-$((N-1)) run/02_run_umi_consensus.sbatch
 # =============================================================================
 #SBATCH --job-name=02_umi_consensus
-#SBATCH --output=/cluster/project/reddy/katja/NGS_pipeline/logs/02_umi_consensus/slurm_%A_%a.out
-#SBATCH --error=/cluster/project/reddy/katja/NGS_pipeline/logs/02_umi_consensus/slurm_%A_%a.err
+#SBATCH --output=/cluster/project/reddy/katja/NGS_pipeline/logs/02_umi_consensus_DMF5/slurm_%A_%a.out
+#SBATCH --error=/cluster/project/reddy/katja/NGS_pipeline/logs/02_umi_consensus_DMF5/slurm_%A_%a.err
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=16G
@@ -22,7 +22,7 @@
 set -euo pipefail
 
 PROJECT_ROOT="/cluster/project/reddy/katja/NGS_pipeline"
-YAML="${YAML:-${PROJECT_ROOT}/config/TCRA3_KH157/script2_umi_config_KH157.yaml}"
+YAML="${YAML:-${PROJECT_ROOT}/config/DMF5_3xNNK/script2_umi_config_DMF5.yaml}"
 VENV="${PROJECT_ROOT}/venv/bin/activate"
 
 if [[ ! -f "${YAML}" ]]; then
@@ -50,7 +50,7 @@ if [[ -z "${SAMPLE_ID:-}" ]]; then
     exit 1
 fi
 
-mkdir -p "${PROJECT_ROOT}/logs/02_umi_consensus"
+mkdir -p "${PROJECT_ROOT}/logs/02_umi_consensus_DMF5"
 cd "${PROJECT_ROOT}"
 source "${VENV}"
 

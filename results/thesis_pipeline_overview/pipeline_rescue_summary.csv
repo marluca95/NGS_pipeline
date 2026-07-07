@@ -1,0 +1,3 @@
+dataset,samples_included,reads_in,reads_lost_no_anchor,reads_lost_too_short,reads_extracted,reads_rescued,variants_total,variants_kept,rescue_retention_of_input,rescue_retention_of_extracted
+DMF5,19,11347626,7223139,6418,4118069,1360535,1577147,62269,0.11989600291726217,0.3303817881633358
+TCRA3,33,40855755,2839412,4624,38011719,36925819,796772,335213,0.9038094877943144,0.9714324942789354

@@ -1,0 +1,44 @@
+NGS thesis pipeline overview validation
+
+Canonical inputs:
+- DMF5: Q30 preprocessing, UMI, extraction, and combined variant labeling.
+- TCRA3: Q30 P3408 run plus KH157 Q30 run for read metrics; rescue totals cover the canonical P3408 run only.
+
+Source integrity checks:
+- DMF5 P3481_LUCA-TCRDMF5 data/P3481_LUCA-TCRDMF5/01_preprocessed/22_05_2026_minLenght110_QScore30/per_sample_metrics.tsv: duplicate_rows=0; rows_removed=0; has_exact_duplicates=False
+- DMF5 P3481_LUCA-TCRDMF5 data/P3481_LUCA-TCRDMF5/02_umi/per_sample_metrics.tsv: duplicate_rows=0; rows_removed=0; has_exact_duplicates=False
+- DMF5 P3481_LUCA-TCRDMF5 data/P3481_LUCA-TCRDMF5/03_extracted/per_sample_metrics.tsv: duplicate_rows=0; rows_removed=0; has_exact_duplicates=False
+- TCRA3 P3408_LUCA-TCRA3 data/P3408_LUCA-TCRA3/01_preprocessed/10_05_2026_minLenght191_QScore30/per_sample_metrics.tsv: duplicate_rows=240; rows_removed=120; has_exact_duplicates=True
+- TCRA3 P3408_LUCA-TCRA3 data/P3408_LUCA-TCRA3/02_umi/14_05_2026_FULLRUN/per_sample_metrics.tsv: duplicate_rows=0; rows_removed=0; has_exact_duplicates=False
+- TCRA3 P3408_LUCA-TCRA3 data/P3408_LUCA-TCRA3/03_extracted/19_05_2026_minlenght191_Q30/per_sample_metrics.tsv: duplicate_rows=0; rows_removed=0; has_exact_duplicates=False
+- TCRA3 P3569_LUCA-TCRA3_KH157 data/P3569_LUCA-TCRA3_KH157/01_preprocessed/26_04_2026_minLenght191_QScore20/per_sample_metrics.tsv: duplicate_rows=0; rows_removed=0; has_exact_duplicates=False
+- TCRA3 P3569_LUCA-TCRA3_KH157 data/P3569_LUCA-TCRA3_KH157/02_umi/27_04_2026_KH157/per_sample_metrics.tsv: duplicate_rows=40; rows_removed=20; has_exact_duplicates=True
+- TCRA3 P3569_LUCA-TCRA3_KH157 data/P3569_LUCA-TCRA3_KH157/03_extracted/27_04_2026_KH157/per_sample_metrics.tsv: duplicate_rows=0; rows_removed=0; has_exact_duplicates=False
+
+Read-accounting deltas by step:
+- DMF5 01_preprocessing: 19/19 samples exact; max_abs_delta=0; total_delta=0
+- DMF5 02_umi_consensus: 19/19 samples exact; max_abs_delta=0; total_delta=0
+- DMF5 02a_singleton_rescue: 19/19 samples exact; max_abs_delta=0; total_delta=0
+- DMF5 03_extraction: 19/19 samples exact; max_abs_delta=0; total_delta=0
+- TCRA3 01_preprocessing: 33/33 samples exact; max_abs_delta=0; total_delta=0
+- TCRA3 02_umi_consensus: 33/33 samples exact; max_abs_delta=0; total_delta=0
+- TCRA3 02a_singleton_rescue: 33/33 samples exact; max_abs_delta=0; total_delta=0
+- TCRA3 03_extraction: 33/33 samples exact; max_abs_delta=0; total_delta=0
+
+Cross-step consistency checks:
+- DMF5 trimming_out_equals_umi_input: left=186293144, right=186293144, delta=0, passes=True
+- DMF5 umi_accounting: left=186293144, right=186293144, delta=0, passes=True
+- DMF5 singletons_match_rescue_input_on_rescue_projects: left=11347626, right=11347626, delta=0, passes=True
+- DMF5 consensus_plus_singleton_addition_equals_extraction_input: left=15966064, right=15966064, delta=0, passes=True
+- DMF5 rescued_le_extracted: left=1360535, right=4118069, delta=-2757534, passes=True
+- DMF5 extracted_le_rescue_input: left=4118069, right=11347626, delta=-7229557, passes=True
+- TCRA3 trimming_out_equals_umi_input: left=661586299, right=661586299, delta=0, passes=True
+- TCRA3 umi_accounting: left=661586299, right=661586299, delta=0, passes=True
+- TCRA3 singletons_match_rescue_input_on_rescue_projects: left=40855755, right=40855755, delta=0, passes=True
+- TCRA3 consensus_plus_singleton_addition_equals_extraction_input: left=120514503, right=120514503, delta=0, passes=True
+- TCRA3 rescued_le_extracted: left=36925819, right=38011719, delta=-1085900, passes=True
+- TCRA3 extracted_le_rescue_input: left=38011719, right=40855755, delta=-2844036, passes=True
+
+Variant-label peptide counts:
+- DMF5: 6 peptides
+- TCRA3: 10 peptides

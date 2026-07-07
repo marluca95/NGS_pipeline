@@ -1,0 +1,15 @@
+dataset,stage,stage_order,count,count_unit,retention_from_raw
+DMF5,Raw reads,0,387570891,reads,1.0
+DMF5,After trimming,1,186293144,reads,0.48066856496712496
+DMF5,UMI input,2,186293144,reads,0.48066856496712496
+DMF5,Consensus UMI,3,14605529,umi_groups,0.037684793515620346
+DMF5,Consensus UMI + singleton rescue,4,15966064,consensus_umi_plus_rescued_singletons,0.0411952093688068
+DMF5,Extraction input,5,15966064,consensus_umi_plus_rescued_singletons,0.0411952093688068
+DMF5,Extraction PASS,6,10031675,reads,0.02588345831163053
+TCRA3,Raw reads,0,1397372220,reads,1.0
+TCRA3,After trimming,1,661586299,reads,0.47345030159537593
+TCRA3,UMI input,2,661586299,reads,0.47345030159537593
+TCRA3,Consensus UMI,3,83588684,umi_groups,0.05981848129197817
+TCRA3,Consensus UMI + singleton rescue,4,120514503,consensus_umi_plus_rescued_singletons,0.08624366598614648
+TCRA3,Extraction input,5,120514503,consensus_umi_plus_rescued_singletons,0.08624366598614648
+TCRA3,Extraction PASS,6,96271571,reads,0.068894722266627

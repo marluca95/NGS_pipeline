@@ -255,14 +255,24 @@ step04_variant_labeling:
   # Condition suffixes parsed from the token after file_token_prefix
   lib_suffix:   "originallib"
   neg_suffix:   "2xnegative"
-  pos3x_suffix: "3xpositive"
-  pos1x_suffix: "31xpositive"
+  positive_suffixes:
+    pos3x: "3xpositive"
+    pos3x1x: "31xpositive"
+  positive_order:
+    - pos3x
+    - pos3x1x
 
   # Peptides missing any of these conditions are skipped
   required_conditions:
     - neg
     - pos3x
-    - pos1x
+    - pos3x1x
+
+  # positive-mode options: single_positive, combined_positive, monotonic_strict
+  positive_mode: "combined_positive"
+
+  # Used only when positive_mode: single_positive
+  single_positive_source: "pos3x"
 
   # Enrichment calculation
   pseudocount:  1.0e-9   # added to frequencies to avoid division by zero

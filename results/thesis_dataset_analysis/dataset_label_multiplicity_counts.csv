@@ -1,0 +1,9 @@
+dataset,label_multiplicity_group,n_tcrs
+A3,Single observed label,55866
+A3,Multiple all 0,88383
+A3,Multiple all 1,3279
+A3,Multiple mixed 0/1,8592
+DMF5,Single observed label,93594
+DMF5,Multiple all 0,77724
+DMF5,Multiple all 1,15800
+DMF5,Multiple mixed 0/1,16016

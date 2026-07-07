@@ -6,7 +6,7 @@
 #
 # Submit:
 #   cd /cluster/project/reddy/katja/NGS_pipeline
-#   TSV="data/P3408_LUCA-TCRA3/P3408_LUCA-TCRA3_samples.tsv"
+#   TSV="data/P3481_LUCA-TCRDMF5/P3481_LUCA-TCRDMF5_samples.tsv"
 #   N=$(awk -F'\t' 'NR>1 {print $1}' "${TSV}" | sort -u | wc -l)
 #   sbatch --array=0-$((N-1)) run/03_run_extraction.sbatch
 # =============================================================================
@@ -21,8 +21,8 @@
 set -euo pipefail
 
 PROJECT_ROOT="/cluster/project/reddy/katja/NGS_pipeline"
-YAML="${PROJECT_ROOT}/config/TCRA3_comblib/script3_library_filtering_and_extraction.yaml"
-TSV="${PROJECT_ROOT}/data/P3408_LUCA-TCRA3/P3408_LUCA-TCRA3_samples.tsv"
+YAML="${PROJECT_ROOT}/config/DMF5_3xNNK/script3_library_filtering_and_extractionDMF5.yaml"
+TSV="${PROJECT_ROOT}/data/P3481_LUCA-TCRDMF5/P3481_LUCA-TCRDMF5_samples.tsv"
 VENV="${PROJECT_ROOT}/venv/bin/activate"
 
 # ---------------------------------------------------------------------------
@@ -34,7 +34,7 @@ if [[ -z "${SAMPLE_ID:-}" ]]; then
     exit 1
 fi
 
-mkdir -p "${PROJECT_ROOT}/run/logs/03_extraction"
+mkdir -p "${PROJECT_ROOT}/logs/03_extraction"
 cd "${PROJECT_ROOT}"
 source "${VENV}"
 

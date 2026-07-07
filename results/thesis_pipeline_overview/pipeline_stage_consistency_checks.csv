@@ -1,0 +1,13 @@
+dataset,check,left_value,right_value,delta,passes
+DMF5,trimming_out_equals_umi_input,186293144,186293144,0,True
+DMF5,umi_accounting,186293144,186293144,0,True
+DMF5,singletons_match_rescue_input_on_rescue_projects,11347626,11347626,0,True
+DMF5,consensus_plus_singleton_addition_equals_extraction_input,15966064,15966064,0,True
+DMF5,rescued_le_extracted,1360535,4118069,-2757534,True
+DMF5,extracted_le_rescue_input,4118069,11347626,-7229557,True
+TCRA3,trimming_out_equals_umi_input,661586299,661586299,0,True
+TCRA3,umi_accounting,661586299,661586299,0,True
+TCRA3,singletons_match_rescue_input_on_rescue_projects,40855755,40855755,0,True
+TCRA3,consensus_plus_singleton_addition_equals_extraction_input,120514503,120514503,0,True
+TCRA3,rescued_le_extracted,36925819,38011719,-1085900,True
+TCRA3,extracted_le_rescue_input,38011719,40855755,-2844036,True

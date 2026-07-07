@@ -1,5 +1,5 @@
 # ================= OUTPUT =================
-output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3481_LUCA-TCRDMF5/03_extracted
+output_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3481_LUCA-TCRDMF5/extracted
 
 
 # ================= Anchor / extraction =================
@@ -41,10 +41,10 @@ max_mutated_codons: 3
 # ================= Sample-driven input =================
 
 # Mapping from sample_id -> sample_name
-samples_tsv: /cluster/project/reddy/katja/NGS_pipeline/data/P3481_LUCA-TCRDMF5/P3481_LUCA-TCRDMF5_samples.tsv
+samples_tsv: /cluster/project/reddy/katja/NGS_pipeline/scripts/P3481_LUCA-TCRDMF5_samples.tsv
 
 # Folder containing processed FASTQs
-input_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3481_LUCA-TCRDMF5/02_umi
+input_dir: /cluster/project/reddy/katja/NGS_pipeline/data/P3481_LUCA-TCRDMF5/umi
 
 # File endings to look for
 # If one is empty ("") it will be skipped.

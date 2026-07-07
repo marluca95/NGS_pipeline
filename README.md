@@ -26,7 +26,7 @@ sample_sheet.tsv
 02_umi_consensus/*_singletons_rescued.fastq.gz
 	-> script3_library_filtering_and_extraction.py
 03_extracted/*.filtered.PASS.aa.tsv
-	-> script4_variant_labeling.py (or script4_variant_labeling_dmf5_2x.py)
+	-> script4_variant_labeling.py
 04_variant_labeling/*.variant_labeling.csv
 	-> script5_create_tcr_peptide_specificity_csv.py (optional)
 final tcr_peptide_specificity CSV
@@ -87,7 +87,7 @@ All scripts live in `scripts/`. Below is a compact summary — purpose, essentia
 	- Input: consensus and/or rescued-singleton FASTQs.
 	- Output: `.filtered.PASS.fastq.gz`, optional `.filtered.FAIL.fastq.gz`, `.PASS.aa.tsv`, and a summary TSV per sample.
 
-- `script4_variant_labeling.py` (and `script4_variant_labeling_dmf5_2x.py`) — Count variants per condition, compute enrichment, assign specificity labels (0/1/2), and write per-peptide CSVs plus a run summary.
+- `script4_variant_labeling.py` — Count variants per condition, compute enrichment, assign specificity labels (0/1/2), and write per-peptide CSVs plus a run summary.
 	- Input: `*.filtered.PASS.aa.tsv` files from step 03.
 	- Output: `{peptide}.variant_labeling.csv` and `variant_labeling_summary.csv`.
 

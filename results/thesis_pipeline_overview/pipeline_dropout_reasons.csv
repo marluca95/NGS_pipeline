@@ -1,0 +1,27 @@
+dataset,step,step_label,loss_reason,reads_lost,step_reads_in,fraction_of_step_input
+DMF5,01_preprocessing,01 preprocessing,Trimming,201277747,387570891,0.519331435032875
+DMF5,02_umi_consensus,02 UMI consensus,Anchor wrong position,626085,186293144,0.003360751697872467
+DMF5,02_umi_consensus,02 UMI consensus,Empty insert,0,186293144,0.0
+DMF5,02_umi_consensus,02 UMI consensus,No anchor,58322521,186293144,0.31306853138943214
+DMF5,02_umi_consensus,02 UMI consensus,Too short,0,186293144,0.0
+DMF5,02a_singleton_rescue,02a singleton rescue,No anchor,7223139,11347626,0.6365330510540266
+DMF5,02a_singleton_rescue,02a singleton rescue,Too short,6418,11347626,0.0005655808536516801
+DMF5,03_extraction,03 extraction,Contains N,814381,15966064,0.051006998343486536
+DMF5,03_extraction,03 extraction,Library validation,1139555,15966064,0.07137357084375962
+DMF5,03_extraction,03 extraction,No anchor,3526950,15966064,0.22090291007226326
+DMF5,03_extraction,03 extraction,Stop codon,435725,15966064,0.027290696066356743
+DMF5,03_extraction,03 extraction,Too short,17778,15966064,0.0011134867053019454
+DMF5,03_extraction,03 extraction,Wrong length,0,15966064,0.0
+TCRA3,01_preprocessing,01 preprocessing,Trimming,735785921,1397372220,0.5265496984046241
+TCRA3,02_umi_consensus,02 UMI consensus,Anchor wrong position,1742825,661586299,0.0026343124134135068
+TCRA3,02_umi_consensus,02 UMI consensus,Empty insert,0,661586299,0.0
+TCRA3,02_umi_consensus,02 UMI consensus,No anchor,14046969,661586299,0.02123225499263249
+TCRA3,02_umi_consensus,02 UMI consensus,Too short,0,661586299,0.0
+TCRA3,02a_singleton_rescue,02a singleton rescue,No anchor,2839412,40855755,0.069498458662678
+TCRA3,02a_singleton_rescue,02a singleton rescue,Too short,4624,40855755,0.00011317866968802803
+TCRA3,03_extraction,03 extraction,Contains N,17846306,120514503,0.14808430152178448
+TCRA3,03_extraction,03 extraction,Library validation,2523462,120514503,0.02093907320017741
+TCRA3,03_extraction,03 extraction,No anchor,3792056,120514503,0.03146555730309073
+TCRA3,03_extraction,03 extraction,Stop codon,73772,120514503,0.000612142092143051
+TCRA3,03_extraction,03 extraction,Too short,7336,120514503,6.08723416467145e-05
+TCRA3,03_extraction,03 extraction,Wrong length,0,120514503,0.0

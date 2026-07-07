@@ -17,8 +17,8 @@
 set -euo pipefail
 
 PROJECT_ROOT="/cluster/project/reddy/katja/NGS_pipeline"
-ROOT_DIR="/cluster/project/reddy/katja/data/raw/P3408_LUCA-TCRA3_KH157"
-OUTPUT="${PROJECT_ROOT}/data/P3408_LUCA-TCRA3_KH157/P3408_LUCA-TCRA3-KH157_samples.tsv"
+ROOT_DIR="/cluster/project/reddy/katja/data/raw/P3569_LUCA-TCRA3_KH157"
+OUTPUT="${PROJECT_ROOT}/data/P3408_LUCA-TCRA3_KH157/P3569_LUCA-TCRA3-KH157_samples.tsv"
 LOGS_DIR="${PROJECT_ROOT}/logs/P3408_LUCA-TCRA3_KH157/00_sample_table"
 VENV="${PROJECT_ROOT}/venv/bin/activate"
 

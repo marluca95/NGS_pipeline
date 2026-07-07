@@ -1,0 +1,10 @@
+dataset,project,source_file,rows_raw,rows_after_dedup,duplicate_rows,duplicate_row_pairs_removed,has_exact_duplicates
+DMF5,P3481_LUCA-TCRDMF5,data/P3481_LUCA-TCRDMF5/01_preprocessed/22_05_2026_minLenght110_QScore30/per_sample_metrics.tsv,76,76,0,0,False
+DMF5,P3481_LUCA-TCRDMF5,data/P3481_LUCA-TCRDMF5/02_umi/per_sample_metrics.tsv,323,323,0,0,False
+DMF5,P3481_LUCA-TCRDMF5,data/P3481_LUCA-TCRDMF5/03_extracted/per_sample_metrics.tsv,152,152,0,0,False
+TCRA3,P3408_LUCA-TCRA3,data/P3408_LUCA-TCRA3/01_preprocessed/10_05_2026_minLenght191_QScore30/per_sample_metrics.tsv,240,120,240,120,True
+TCRA3,P3408_LUCA-TCRA3,data/P3408_LUCA-TCRA3/02_umi/14_05_2026_FULLRUN/per_sample_metrics.tsv,510,510,0,0,False
+TCRA3,P3408_LUCA-TCRA3,data/P3408_LUCA-TCRA3/03_extracted/19_05_2026_minlenght191_Q30/per_sample_metrics.tsv,240,240,0,0,False
+TCRA3,P3569_LUCA-TCRA3_KH157,data/P3569_LUCA-TCRA3_KH157/01_preprocessed/26_04_2026_minLenght191_QScore20/per_sample_metrics.tsv,12,12,0,0,False
+TCRA3,P3569_LUCA-TCRA3_KH157,data/P3569_LUCA-TCRA3_KH157/02_umi/27_04_2026_KH157/per_sample_metrics.tsv,71,51,40,20,True
+TCRA3,P3569_LUCA-TCRA3_KH157,data/P3569_LUCA-TCRA3_KH157/03_extracted/27_04_2026_KH157/per_sample_metrics.tsv,24,24,0,0,False
